@@ -3,12 +3,18 @@
 
 #include "pch.h"
 #include "framework.h"
+#include "Application.h"
 #include "FYP_Project.h"
+#include <windowsx.h>
+
+#define WINDOW_WIDTH 1000
+#define WINDOW_HEIGHT 1000
 
 #define MAX_LOADSTRING 100
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
+HWND hWnd;
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
@@ -41,17 +47,74 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_FYPPROJECT));
 
-    MSG msg;
+    MSG msg = MSG{};
 
-    // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
+    // TODO: Place code here.
+    Application* application;
+    application = new Application(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    application->Init(hInst, hWnd);
+
+    if (application->IsInitialised() == true)
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        application->SetRunning(true);
+    }
+
+    float deltaTime = 0.0f;
+    float currentTime = 0.0f;
+    float previousTime = 0.0f;
+
+    if (application->IsInitialised())
+    {
+
+        // Main message loop:
+        while (msg.message != WM_QUIT)
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            currentTime = (float)GetTickCount();
+
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                bool handled = false;
+                if (msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST)
+                {
+                    //TODO: Handle keypress
+                    //application->HandleKeyboardInput();
+                }
+                else if (msg.message == WM_MOUSEMOVE)
+                {
+                    //todo: handle mouse move
+                    //Pass through X pos, Y pos and mouse flags;
+                    application->UpdateMouseInputDetails(GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam), (DWORD)msg.wParam);
+                }
+
+                if (!handled)
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+            }
+
+            if (application->IsRunning())
+            {
+
+                deltaTime = currentTime - previousTime;
+                deltaTime /= 1000;
+
+                if (deltaTime > 0.0f && deltaTime < 1.0f)
+                {
+                    application->Update(deltaTime);
+                    application->Render();
+                }
+            }
+
+            previousTime = currentTime;
         }
     }
+
+    application->Shutdown();
+    delete application;
+    application = nullptr;
+
 
     return (int) msg.wParam;
 }
@@ -98,8 +161,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+   hWnd = CreateWindowW(
+       szWindowClass,
+       szTitle,
+       WS_OVERLAPPEDWINDOW,
+       CW_USEDEFAULT,
+       0,
+       WINDOW_WIDTH,
+       WINDOW_HEIGHT,
+       nullptr,
+       nullptr,
+       hInstance,
+       nullptr);
 
    if (!hWnd)
    {
