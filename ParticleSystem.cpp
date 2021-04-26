@@ -4,12 +4,8 @@
 #include "Renderer.h"
 #include "Vertex.h"
 
-#include "NewRenderer.h"
-
-
 ParticleSystem::ParticleSystem(int MaxParticleCount)
 {
-
     deadParticleCount = 0;
     livingParticleCount = 0;
 
@@ -139,8 +135,8 @@ void ParticleSystem::UpdateInstanceBuffer()
 	for (int i = 0; i < livingParticleCount; i++)
 	{
 		instancePositions.push_back(XMFLOAT3(
-			livingParticles[i]->model.position.x,
-			livingParticles[i]->model.position.y,
+			LivingParticles[i]->GetModel()->position.x,
+			LivingParticles[i]->GetModel()->position.y,
 			0.0f));
 	}
 
@@ -164,11 +160,21 @@ Particle* ParticleSystem::GetFreshParticle()
         Particle* particle = deadParticlesList->data;
 		particle->CreateRandom();
         deadParticlesList = LinkedList::DeleteFront(deadParticlesList);
-		livingParticles.push_back(particle);
+		LivingParticles.push_back(particle);
         livingParticleCount++;
         deadParticleCount--;
         return particle;
     }
+	else
+	{
+		int num = rand() % livingParticleCount;
+
+		Particle* particle = LivingParticles[num];
+		particle->Kill();
+		particle->Create();
+
+		return particle;
+	}
 
     return nullptr;
 }
@@ -192,8 +198,7 @@ void ParticleSystem::Update(float DeltaTime)
 void ParticleSystem::Render()
 {
 	for(int i = 0; i < livingParticleCount; i++)
-		ParticleRenderer::Render(livingParticles[i]);
-
+		Renderer::Render(LivingParticles[i]);
 
 //    Renderer::Get()->PrepareGeometryRender();
 //    

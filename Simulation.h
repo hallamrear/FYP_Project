@@ -1,6 +1,7 @@
 #pragma once
 #include "SpatialGrid.h"
 #include "ParticleSystem.h"
+#include "cute_c2.h"
 
 enum RENDER_STATE
 {
@@ -11,7 +12,7 @@ enum RENDER_STATE
 class Simulation
 {
 	//TODO : Create
-	
+	c2AABB walls[4];
 	
 	//Simulation Variables
 	int particleCount;
@@ -33,11 +34,12 @@ class Simulation
 
 	void GetLocalParticlesFromGrid(std::vector<Particle*>* local, Particle* particle);
 
-
 public:
 	Simulation(int particle_count, float particle_neighbour_distance, XMFLOAT2 world_size, XMINT2 grid_size);
 	~Simulation();
 
+
+	void AddParticle(XMINT2 mouseLocation);
 	void Update(float DeltaTime);
 	void Render();
 };

@@ -2,7 +2,6 @@
 #include "Simulation.h"
 #include "Particle.h"
 #include "Collisions.h"
-#include "NewRenderer.h"
 #include "Overloads.h"
 
 Simulation::Simulation(
@@ -11,8 +10,27 @@ Simulation::Simulation(
 	XMFLOAT2 world_size,
 	XMINT2 grid_size)
 {
-	//Create Renderer
-	ParticleRenderer::Get()->Init(NULL, NULL, 0, 0);
+
+	//top
+	walls[0].max.x = WORLD_SIZE.x;
+	walls[0].max.y = 0.0f;
+	walls[0].min.x = 0.0f;
+	walls[0].min.y = WORLD_EDGE;
+	//bottom
+	walls[1].max.x = WORLD_SIZE.x;
+	walls[1].max.y = WORLD_EDGE;
+	walls[1].min.x = 0.0f;
+	walls[1].min.y = WORLD_SIZE.y;
+	//left
+	walls[2].max.x = WORLD_EDGE;
+	walls[2].max.y = 0.0f;
+	walls[2].min.x = 0.0f;
+	walls[2].min.y = WORLD_SIZE.y;
+	//right
+	walls[3].max.x = WORLD_SIZE.x;
+	walls[3].max.y = 0.0f;
+	walls[3].min.x = WORLD_SIZE.x - WORLD_EDGE;
+	walls[3].min.y = WORLD_SIZE.y;
 
 	particleCount = particle_count;
 	particleNeighbourSearchRadius = particle_neighbour_distance;
@@ -26,8 +44,9 @@ Simulation::Simulation(
 	particleSystem = new ParticleSystem(particle_count);
 
 	for (int i = 0; i < particle_count; i++)
-	{ 
-		grid->Populate(particleSystem->GetFreshParticle());
+	{
+		particleSystem->GetFreshParticle();
+		//grid->Populate(particleSystem->GetFreshParticle());
 	}
 }
 
@@ -65,7 +84,7 @@ float Simulation::ViscoKernel(float radius)
 
 float Simulation::CalculateParticlePressure(Particle* particle, std::vector<Particle*>* locals)
 {
-	float FocussedParticleLocalPressure = GAS_CONSTANT * particle->model.density;
+	float FocussedParticleLocalPressure = GAS_CONSTANT * particle->GetModel()->density;
 	//Pressure for particle i = weighted of surrounding
 	float pressureSum = 0.0f;
 	float dist = 0.0f;
@@ -77,12 +96,12 @@ float Simulation::CalculateParticlePressure(Particle* particle, std::vector<Part
 	{
 		if (locals->at(particleCount) != particle)
 		{
-			diff = locals->at(particleCount)->model.position - particle->model.position;
+			diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
 			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
 
 			//Using spiky kernel as the poly6 gradient is 0 at the centre
-			float localPressure = GAS_CONSTANT * locals->at(particleCount)->model.density;
-			pressureSum += particle->model.mass * ((FocussedParticleLocalPressure + localPressure) / (2 * locals->at(particleCount)->model.density) * Spiky(dist));
+			float localPressure = GAS_CONSTANT * locals->at(particleCount)->GetModel()->density;
+			pressureSum += particle->GetModel()->mass * ((FocussedParticleLocalPressure + localPressure) / (2 * locals->at(particleCount)->GetModel()->density) * Spiky(dist));
 		}
 	}
 
@@ -101,10 +120,10 @@ float Simulation::CalculateParticleDensity(Particle* particle, std::vector<Parti
 	{
 		if (locals->at(particleCount) != particle)
 		{
-			diff = locals->at(particleCount)->model.position - particle->model.position;
+			diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
 			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
 
-			DensitySum += locals->at(particleCount)->model.mass * Poly6(dist * dist);
+			DensitySum += locals->at(particleCount)->GetModel()->mass * Poly6(dist * dist);
 		}
 	}
 
@@ -122,7 +141,7 @@ float Simulation::CalculateParticleViscosity(Particle* particle, std::vector<Par
 	int size = locals->size();
 	for (int particleCount = 0; particleCount < size; particleCount++)
 	{
-		diff = locals->at(particleCount)->model.position - particle->model.position;
+		diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
 		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
 	}
 
@@ -141,7 +160,7 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 			//Check all their particles if theyre in the smoothing radius
 			for (int j = 0; j < cell->neighbours[i]->particles.size(); j++)
 			{
-				if (Collisions::IsPointInCircle(cell->neighbours[i]->particles[j]->model.position, particle->model.position, particleNeighbourSearchRadius))
+				if (Collisions::IsPointInCircle(cell->neighbours[i]->particles[j]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
 					locals->push_back(cell->neighbours[i]->particles[j]);
 			}
 		}
@@ -149,20 +168,27 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 		//Check your cells particles too
 		for (int k = 0; k < cell->particles.size(); k++)
 		{
-			if (Collisions::IsPointInCircle(cell->particles[k]->model.position, particle->model.position, particleNeighbourSearchRadius))
+			if (Collisions::IsPointInCircle(cell->particles[k]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
 				locals->push_back(cell->particles[k]);
 		}
 	}
+}
+
+void Simulation::AddParticle(XMINT2 mouseLocation)
+{
+	Particle* particle = particleSystem->GetFreshParticle();
+	particle->GetModel()->position.x = mouseLocation.x;
+	particle->GetModel()->position.y = mouseLocation.y;
 }
 
 void Simulation::Update(float DeltaTime)
 {
 	grid->ClearCells();
 
-	for (int i = 0; i < particleCount; i++)
+	for (int i = 0; i < particleSystem->livingParticleCount; i++)
 	{
 		//Populating grid with particles for this frame.
-		//grid->Populate(particleSystem->ParticlePool[i]);
+		grid->Populate(particleSystem->LivingParticles[i]);
 	}
 
 	//P * du/dt = -Dp + uD^2u + Pf
@@ -179,24 +205,46 @@ void Simulation::Update(float DeltaTime)
 
 	std::vector<Particle*> allLocalParticles;
 
-	for (int i = 0; i < particleCount; i++)
+	for (int i = 0; i < particleSystem->livingParticleCount; i++)
 	{
 		allLocalParticles.clear();
 
-		if (particleSystem->ParticlePool[i]->GetAlive() == true)
+		GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->LivingParticles[i]);
+
+		float tempDensity = CalculateParticleDensity(particleSystem->LivingParticles[i], &allLocalParticles);
+		float tempPressure = CalculateParticlePressure(particleSystem->LivingParticles[i], &allLocalParticles);
+		float tempViscosity = CalculateParticleViscosity(particleSystem->LivingParticles[i], &allLocalParticles);
+
+		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
-			//GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->ParticlePool[i]);
-
-			/*float tempDensity = CalculateParticleDensity(particleSystem->ParticlePool[i], &allLocalParticles);
-			float tempPressure = CalculateParticlePressure(particleSystem->ParticlePool[i], &allLocalParticles);
-			float tempViscosity = CalculateParticleViscosity(particleSystem->ParticlePool[i], &allLocalParticles);*/
-
-			particleSystem->ParticlePool[i]->Update(DeltaTime);
+			if(c2CircletoCircle(particleSystem->LivingParticles[i]->GetCollider(), allLocalParticles[neighbours]->GetCollider()))
+			{
+				particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
+			}
 		}
+
+		particleSystem->LivingParticles[i]->GetModel()->density = tempDensity;
+		particleSystem->LivingParticles[i]->GetModel()->pressure = tempPressure;
+		particleSystem->LivingParticles[i]->GetModel()->viscosity = tempViscosity;
+
+		particleSystem->LivingParticles[i]->Update(DeltaTime);
+
+		for (int x = 0; x < 4; x++)
+		{
+			c2Manifold manifold;
+
+			c2CircletoAABBManifold(particleSystem->ParticlePool[i]->GetCollider(), walls[x], &manifold);
+
+			if(c2CircletoAABB(particleSystem->ParticlePool[i]->GetCollider(), walls[x]))
+			{
+				OutputDebugStringA("Collision");
+			}
+		}
+
 	}
 
 	//Call only seems to update instances
-	particleSystem->Update(DeltaTime);
+	//particleSystem->Update(DeltaTime);
 }
 
 void Simulation::Render()

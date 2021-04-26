@@ -1,15 +1,16 @@
 #pragma once
 #define GRAVITY XMFLOAT2(0.0f, 9.81f)
-#define VELOCITY_THRESHOLD 0.01f
+#define VELOCITY_THRESHOLD 1.0f
 #define GAS_CONSTANT 8.314
-#define WORLD_EDGE 100.0f
 
 class PhysicsModel
 {
 private:
 	bool isResting;
-
 	XMFLOAT2 previousPosition;
+
+	float initialDensity;
+
 
 public:
 	PhysicsModel();

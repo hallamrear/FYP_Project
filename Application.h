@@ -1,4 +1,5 @@
 #pragma once
+#define CUTE_C2_IMPLEMENTATION
 
 class Simulation;
 
@@ -13,8 +14,8 @@ class Application
 	XMFLOAT2 mouseDelta;
 	DWORD mouseFlags;
 
-	Mouse* mouseController;
-	Keyboard* keyboardController;
+	std::unique_ptr<Mouse> mouseController;
+	std::unique_ptr<Keyboard> keyboardController;
 
 	HINSTANCE Win32Instance;
 	HWND Win32Window;

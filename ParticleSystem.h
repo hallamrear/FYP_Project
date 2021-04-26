@@ -13,7 +13,6 @@ private:
 	//Linked list of particles which are dead and can be reallocated
 	LinkedListNode* deadParticlesList;
 
-	std::vector<Particle*> livingParticles;
 
 	HRESULT CreateBuffers();
 	void UpdateInstanceBuffer();
@@ -21,6 +20,7 @@ private:
 public:
 	//Exposing to simulation so i dont have to loop twice
 	std::vector<Particle*> ParticlePool;
+	std::vector<Particle*> LivingParticles;
 
 	UINT MaxParticleCount;
 	UINT livingParticleCount;

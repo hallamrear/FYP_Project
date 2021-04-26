@@ -62,6 +62,7 @@ using std::string;
 #define PARTICLE_SEARCH_DISTANCE 1.0f
 #define WORLD_SIZE XMFLOAT2(1000, 1000)
 #define GRID_SIZE XMINT2(100, 100)
+#define WORLD_EDGE 100.0f
 
 // When you are using pre-compiled headers, this source file is necessary for compilation to succeed.
 

@@ -2,7 +2,6 @@
 #include "Application.h"
 #include "Device.h"
 #include "Renderer.h"
-#include "NewRenderer.h"
 
 #include "Simulation.h"
 
@@ -46,8 +45,6 @@ bool Application::Init(HINSTANCE instance, HWND window)
 	Win32Instance = instance;
 	Win32Window = window;
 
-	mouseController = new Mouse();
-	keyboardController = new Keyboard();
 
 	if (Renderer::Get()->Init(instance, window, windowWidth, windowHeight) != S_OK)
 	{
@@ -60,6 +57,14 @@ bool Application::Init(HINSTANCE instance, HWND window)
 		PARTICLE_SEARCH_DISTANCE,
 		WORLD_SIZE,
 		GRID_SIZE);
+
+
+	keyboardController = std::make_unique<DirectX::Keyboard>();
+	mouseController = std::make_unique<DirectX::Mouse>();
+	mouseController->SetWindow(window);
+	mouseController->SetMode(Mouse::MODE_RELATIVE);
+
+	auto state = mouseController->GetState();
 
 	isInitialised = true;
 	return isInitialised;
@@ -80,6 +85,9 @@ void Application::UpdateMouseInputDetails(int posX, int posY, DWORD flags)
 void Application::HandleKeyboardInput(float DeltaTime)
 {
 	//TODO : implement
+	if (GetAsyncKeyState(VK_SPACE))
+		simulation->AddParticle(mouseWindowPos);
+
 	if (GetAsyncKeyState(VK_LEFT))
 		Renderer::Get()->AlterViewPosition(XMFLOAT2(-100.0f * DeltaTime, 0.0f));
 
@@ -87,7 +95,7 @@ void Application::HandleKeyboardInput(float DeltaTime)
 		Renderer::Get()->AlterViewPosition(XMFLOAT2(100.0f * DeltaTime, 0.0f));
 
 	if (GetAsyncKeyState(VK_UP))
-		Renderer::Get()->AlterViewPosition	 (XMFLOAT2(0.0f, 100.0f * DeltaTime));
+		Renderer::Get()->AlterViewPosition(XMFLOAT2(0.0f, 100.0f * DeltaTime));
 
 	if (GetAsyncKeyState(VK_DOWN))
 		Renderer::Get()->AlterViewPosition(XMFLOAT2(0.0f, -100.0f * DeltaTime));
@@ -96,6 +104,8 @@ void Application::HandleKeyboardInput(float DeltaTime)
 void Application::HandleMouseInput(float DeltaTime)
 {
 	//TODO : implement
+	std::string str = "WinPosX " + std::to_string(mouseWindowPos.x) + " WinPosY " + std::to_string(mouseWindowPos.y) + '\n';
+	OutputDebugStringA(str.c_str());
 }
 
 void Application::Update(float DeltaTime)

@@ -172,12 +172,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="cute_c2.h" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FYP_Project.h" />
     <ClInclude Include="Collisions.h" />
     <ClInclude Include="LinkedList.h" />
-    <ClInclude Include="NewRenderer.h" />
     <ClInclude Include="Overloads.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleSystem.h" />
@@ -196,7 +196,6 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="FYP_Project.cpp" />
     <ClCompile Include="LinkedList.cpp" />
-    <ClCompile Include="NewRenderer.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="pch.cpp">

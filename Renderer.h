@@ -4,6 +4,8 @@
 #define VS_SHADER "VertexShader.hlsl"
 #define PS_SHADER "PixelShader.hlsl"
 
+class Particle;
+
 class Renderer
 {
 private:
@@ -14,10 +16,14 @@ private:
 	ID3D11SamplerState* linearSampler;
 	ID3D11BlendState* NoBlendState;
 	ID3D11RasterizerState* NoCullSolidFillState;
+	SpriteBatch* spriteBatch;
 
 	ID3D11Texture2D* rtTex;
 	ID3D11RenderTargetView* rtView;
 	ID3D11ShaderResourceView* rtSRV;
+
+	ID3D11ShaderResourceView* outlineTexture;
+	ID3D11Resource* outlineResource;
 
 	XMFLOAT2 ViewPosition;
 	bool IsViewMatrixDirty;
@@ -27,6 +33,7 @@ private:
 	Renderer();
 	~Renderer();
 
+	void Render_Impl(Particle* particle);
 public:
 	Renderer(const Renderer&) = delete;
 
@@ -42,5 +49,7 @@ public:
 	void PresentFrame();
 
 	void PrepareGeometryRender();
+
+	static void Render(Particle* particle);
 };
 

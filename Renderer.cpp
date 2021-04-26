@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Renderer.h"
+#include "Particle.h"
 
 Renderer* Renderer::instance;
 
@@ -16,7 +17,7 @@ Renderer::Renderer()
     rtView = nullptr;
     rtSRV = nullptr;
     constantBuffer;
-
+    spriteBatch = nullptr;
     ViewPosition = XMFLOAT2();
 }
 
@@ -154,6 +155,14 @@ HRESULT Renderer::Init(HINSTANCE hInstance, HWND hWindow, int width, int height)
 
     GraphicsDevice::GetContext()->UpdateSubresource(GraphicsDevice::Get()->GetConstantBuffer(), 0, nullptr, &constantBuffer, 0, 0);
 
+    spriteBatch = new SpriteBatch(GraphicsDevice::GetContext());
+
+    hr = CreateDDSTextureFromFile(
+        GraphicsDevice::GetDevice(),
+        L"Resources/Edge.dds",
+        &outlineResource,
+        &outlineTexture);
+
     isInitialised = true;
 
     return hr;
@@ -205,11 +214,23 @@ void Renderer::PrepareFrame()
 
     GraphicsDevice::GetContext()->PSSetSamplers(0, 1, &linearSampler);
     GraphicsDevice::GetContext()->UpdateSubresource(GraphicsDevice::Get()->GetConstantBuffer(), 0, nullptr, &constantBuffer, 0, 0);
+    
+    spriteBatch->Begin();
+
+
+    RECT rect = RECT();
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = WindowWidth;
+    rect.bottom = WindowHeight;
+
+    spriteBatch->Draw(outlineTexture, rect);
 }
 
 void Renderer::PresentFrame()
 {
-    GraphicsDevice::Get()->GetSwapChain()->Present(4, 0);
+    spriteBatch->End();
+    GraphicsDevice::Get()->GetSwapChain()->Present(0, 0);
 }
 
 void Renderer::PrepareGeometryRender()
@@ -228,4 +249,14 @@ void Renderer::PrepareGeometryRender()
 
     GraphicsDevice::GetContext()->PSSetConstantBuffers(0, 1, &buffer);
     GraphicsDevice::GetContext()->VSSetConstantBuffers(0, 1, &buffer);
+}
+
+void Renderer::Render_Impl(Particle* particle)
+{
+    spriteBatch->Draw(particle->GetTexture(), particle->GetModel()->position);
+}
+
+void Renderer::Render(Particle* particle)
+{
+    Get()->Render_Impl(particle);
 }

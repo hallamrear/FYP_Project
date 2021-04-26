@@ -11,7 +11,7 @@ PhysicsModel::PhysicsModel()
 	velocity = XMFLOAT2(0.0f, 0.0f);
 	externalForce = XMFLOAT2(0.0f, 0.0f);
 
-	density = 10.0f;
+	initialDensity = density = 10.0f;
 	viscosity = 10.0f;
 	mass = 100.0f;
 	pressure = 5.0f;
@@ -41,10 +41,24 @@ void PhysicsModel::ApplyExternalForce(XMFLOAT2 force)
 void PhysicsModel::Update(float DeltaTime)
 {
 	if (position.x < WORLD_EDGE || position.x > WORLD_SIZE.x - WORLD_EDGE)
-		velocity.x *= -1;
+	{
+		if (position.x < WORLD_EDGE)
+			position.x = WORLD_EDGE + 0.1f;
+		else
+			position.x = WORLD_SIZE.x - WORLD_EDGE - 0.1f;
+
+		velocity.x *= -0.95f;
+	}
 
 	if (position.y < WORLD_EDGE || position.y > WORLD_SIZE.y - WORLD_EDGE)
-		velocity.y *= -1;
+	{
+		if (position.y < WORLD_EDGE)
+			position.y = WORLD_EDGE + 0.1f;
+		else
+			position.y = WORLD_SIZE.y - WORLD_EDGE - 0.1f;
+
+		velocity.y *= -0.95f;
+	}
 
 	float dragcoeff = 0.47f;
 	float mass = 10.0f;
@@ -56,8 +70,10 @@ void PhysicsModel::Update(float DeltaTime)
 	//Add weight as a force based on the gravity(mass x g)
 	XMFLOAT2 weight = XMFLOAT2(0.0f, 0.0f);
 
-	if(isResting == false)
+	if (isResting == false)
 		weight += GRAVITY;
+	else
+		weight += XMFLOAT2(0.0f, 0.0f);
 
 	weight.x *= mass;
 	weight.y *= mass;
@@ -82,10 +98,10 @@ void PhysicsModel::Update(float DeltaTime)
 	position.x += velocity.x * DeltaTime;
 	position.y += velocity.y * DeltaTime;
 
-	if (velocity.x < VELOCITY_THRESHOLD)
-		velocity.x = 0.0f;
-	if (velocity.y < VELOCITY_THRESHOLD)
-		velocity.y = 0.0f;
+	if (acceleration.x < VELOCITY_THRESHOLD && acceleration.x >(-1 * VELOCITY_THRESHOLD))
+		acceleration.x = 0.0f;
+	if (acceleration.y < VELOCITY_THRESHOLD && acceleration.y > (-1 * VELOCITY_THRESHOLD))
+		acceleration.y = 0.0f;
 
 	if (velocity == XMFLOAT2(0.0F, 0.0F))
 		isResting = true;
@@ -105,7 +121,7 @@ void PhysicsModel::Reset()
 	velocity = XMFLOAT2();
 	externalForce = XMFLOAT2();
 
-	density = 10.0f;
+	initialDensity = density = 10.0f;
 	viscosity = 10.0f;
 	mass = 100.0f;
 	pressure = 5.0f;
