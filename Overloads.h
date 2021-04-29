@@ -49,6 +49,14 @@ namespace
 		return ans;
 	}
 
+	XMFLOAT2 operator*(const float& left, const XMFLOAT2& right)
+	{
+		XMFLOAT2 ans;
+		ans.x = right.x / left;
+		ans.y = right.y / left;
+		return ans;
+	}
+
 	XMFLOAT2 operator/(const XMFLOAT2& left, const XMFLOAT2& right)
 	{
 		XMFLOAT2 ans;
@@ -56,6 +64,23 @@ namespace
 		ans.y = left.y / right.y;
 		return ans;
 	}
+
+	XMFLOAT2 operator/(const XMFLOAT2& left, const float& right)
+	{
+		XMFLOAT2 ans;
+		ans.x = left.x / right;
+		ans.y = left.y / right;
+		return ans;
+	}
+
+	XMFLOAT2 operator/(const float& left, const XMFLOAT2& right)
+	{
+		XMFLOAT2 ans;
+		ans.x = right.x / left;
+		ans.y = right.y / left;
+		return ans;
+	}
+
 
 	bool operator==(const XMFLOAT2& left, const XMFLOAT2& right)
 	{

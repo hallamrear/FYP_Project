@@ -2,6 +2,7 @@
 #define GRAVITY XMFLOAT2(0.0f, 9.81f)
 #define VELOCITY_THRESHOLD 1.0f
 #define GAS_CONSTANT 8.314
+#define VISCOSITY_CONSTANT 100.0f
 
 class PhysicsModel
 {
@@ -10,7 +11,6 @@ private:
 	XMFLOAT2 previousPosition;
 
 	float initialDensity;
-
 
 public:
 	PhysicsModel();

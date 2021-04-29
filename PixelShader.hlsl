@@ -1,4 +1,4 @@
-#include "ShaderStructures.hlsli"
+#include "Structures.hlsli"
 
 float4 ps_main(VS_OUTPUT input) : SV_Target
 {

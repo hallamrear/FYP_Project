@@ -2,7 +2,7 @@
 #include "SpatialGrid.h"
 #include "Particle.h"
 
-void SpatialGrid::PopulateCellsWithNeighbours(XMINT2 cellPos,	 GridCell* cellToPopulate)
+void SpatialGrid::PopulateCellsWithNeighbours(XMINT2 cellPos, GridCell* cellToPopulate)
 {
 	GridCell* cell;
 
@@ -25,7 +25,6 @@ void SpatialGrid::PopulateCellsWithNeighbours(XMINT2 cellPos,	 GridCell* cellToP
 				{
 					cellToPopulate->neighbours.push_back(cell);
 				}
-
 			}
 			else
 			{

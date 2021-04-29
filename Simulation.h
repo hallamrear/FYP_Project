@@ -30,7 +30,7 @@ class Simulation
 	float CalculateParticleDensity(Particle* particle, std::vector<Particle*>* locals);
 	float CalculateParticlePressure(Particle* particle, std::vector<Particle*>* locals);
 	float CalculateParticleViscosity(Particle* particle, std::vector<Particle*>* locals);
-	void ApplyForcesToParticles();
+	void ApplyForceToParticle(Particle* particle, std::vector<Particle*>* locals);
 
 	void GetLocalParticlesFromGrid(std::vector<Particle*>* local, Particle* particle);
 

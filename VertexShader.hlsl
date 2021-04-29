@@ -1,4 +1,4 @@
-#include "ShaderStructures.hlsli"
+#include "Structures.hlsli"
 
 struct VS_INPUT
 {

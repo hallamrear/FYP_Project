@@ -104,8 +104,8 @@ void Application::HandleKeyboardInput(float DeltaTime)
 void Application::HandleMouseInput(float DeltaTime)
 {
 	//TODO : implement
-	std::string str = "WinPosX " + std::to_string(mouseWindowPos.x) + " WinPosY " + std::to_string(mouseWindowPos.y) + '\n';
-	OutputDebugStringA(str.c_str());
+	//std::string str = "WinPosX " + std::to_string(mouseWindowPos.x) + " WinPosY " + std::to_string(mouseWindowPos.y) + '\n';
+	//OutputDebugStringA(str.c_str());
 }
 
 void Application::Update(float DeltaTime)

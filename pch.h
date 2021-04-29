@@ -29,6 +29,7 @@
 #include <exception>
 #include <math.h>
 #include <cmath>
+#include <algorithm>
 
 //DirectX11
 #pragma comment(lib, "d3d11.lib")
@@ -58,8 +59,8 @@
 using namespace DirectX;
 using std::string;
 
-#define PARTICLE_COUNT 100
-#define PARTICLE_SEARCH_DISTANCE 1.0f
+#define PARTICLE_COUNT 250
+#define PARTICLE_SEARCH_DISTANCE 5.0f
 #define WORLD_SIZE XMFLOAT2(1000, 1000)
 #define GRID_SIZE XMINT2(100, 100)
 #define WORLD_EDGE 100.0f

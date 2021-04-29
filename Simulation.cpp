@@ -3,6 +3,7 @@
 #include "Particle.h"
 #include "Collisions.h"
 #include "Overloads.h"
+#include "PhysicsModel.h"
 
 Simulation::Simulation(
 	int particle_count,
@@ -46,7 +47,7 @@ Simulation::Simulation(
 	for (int i = 0; i < particle_count; i++)
 	{
 		particleSystem->GetFreshParticle();
-		//grid->Populate(particleSystem->GetFreshParticle());
+		grid->Populate(particleSystem->GetFreshParticle());
 	}
 }
 
@@ -148,6 +149,40 @@ float Simulation::CalculateParticleViscosity(Particle* particle, std::vector<Par
 	return mew * ViscositySum;
 }
 
+void Simulation::ApplyForceToParticle(Particle* particle, std::vector<Particle*>* locals)
+{
+
+	float dist = 0.0f;
+	XMFLOAT2 diff = XMFLOAT2();
+	XMFLOAT2 pressureForce = XMFLOAT2();
+	XMFLOAT2 viscForce = XMFLOAT2();
+
+	int size = locals->size();
+	for (int particleCount = 0; particleCount < size; particleCount++)
+	{
+		diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
+		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
+
+		if (dist != 0.0f)
+		{
+			diff.x /= dist;
+			diff.y /= dist;
+
+
+			pressureForce += diff * particle->GetModel()->mass * (particle->GetModel()->pressure);
+
+			viscForce += VISCOSITY_CONSTANT * particle->GetModel()->mass *
+				((locals->at(particleCount)->GetModel()->velocity - particle->GetModel()->velocity) / locals->at(particleCount)->GetModel()->pressure) *
+				ViscoKernel(dist);
+		}
+	}
+
+	particle->GetModel()->ApplyExternalForce(pressureForce);
+	particle->GetModel()->ApplyExternalForce(viscForce);
+
+
+}
+
 void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Particle* particle)
 {
 	GridCell* cell = grid->GetCellContainingParticle(particle);
@@ -157,11 +192,16 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 		//In each neighbour
 		for (int i = 0; i < cell->neighbours.size(); i++)
 		{
+			if (cell->neighbours[i] == cell)
+				continue;
+
 			//Check all their particles if theyre in the smoothing radius
 			for (int j = 0; j < cell->neighbours[i]->particles.size(); j++)
 			{
 				if (Collisions::IsPointInCircle(cell->neighbours[i]->particles[j]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
+				{
 					locals->push_back(cell->neighbours[i]->particles[j]);
+				}
 			}
 		}
 
@@ -169,8 +209,12 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 		for (int k = 0; k < cell->particles.size(); k++)
 		{
 			if (Collisions::IsPointInCircle(cell->particles[k]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
-				locals->push_back(cell->particles[k]);
+			{
+					locals->push_back(cell->particles[k]);
+			}
 		}
+
+		locals->erase(std::unique(locals->begin(), locals->end()), locals->end());
 	}
 }
 
@@ -211,9 +255,9 @@ void Simulation::Update(float DeltaTime)
 
 		GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->LivingParticles[i]);
 
-		float tempDensity = CalculateParticleDensity(particleSystem->LivingParticles[i], &allLocalParticles);
-		float tempPressure = CalculateParticlePressure(particleSystem->LivingParticles[i], &allLocalParticles);
-		float tempViscosity = CalculateParticleViscosity(particleSystem->LivingParticles[i], &allLocalParticles);
+		particleSystem->LivingParticles[i]->GetModel()->density = CalculateParticleDensity(particleSystem->LivingParticles[i], &allLocalParticles);
+		particleSystem->LivingParticles[i]->GetModel()->pressure = CalculateParticlePressure(particleSystem->LivingParticles[i], &allLocalParticles);
+		particleSystem->LivingParticles[i]->GetModel()->viscosity = CalculateParticleViscosity(particleSystem->LivingParticles[i], &allLocalParticles);
 
 		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
@@ -223,9 +267,7 @@ void Simulation::Update(float DeltaTime)
 			}
 		}
 
-		particleSystem->LivingParticles[i]->GetModel()->density = tempDensity;
-		particleSystem->LivingParticles[i]->GetModel()->pressure = tempPressure;
-		particleSystem->LivingParticles[i]->GetModel()->viscosity = tempViscosity;
+		ApplyForceToParticle(particleSystem->LivingParticles[i], &allLocalParticles);
 
 		particleSystem->LivingParticles[i]->Update(DeltaTime);
 

@@ -136,7 +136,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ShaderStructures.hlsli">
+    <None Include="Structures.hlsli">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
