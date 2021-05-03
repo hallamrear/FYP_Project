@@ -17,6 +17,7 @@ private:
 	ID3D11BlendState* NoBlendState;
 	ID3D11RasterizerState* NoCullSolidFillState;
 	SpriteBatch* spriteBatch;
+	PrimitiveBatch<VertexPositionColor>* primitiveBatch;
 
 	ID3D11Texture2D* rtTex;
 	ID3D11RenderTargetView* rtView;

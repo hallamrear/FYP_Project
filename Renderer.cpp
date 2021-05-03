@@ -156,6 +156,10 @@ HRESULT Renderer::Init(HINSTANCE hInstance, HWND hWindow, int width, int height)
     GraphicsDevice::GetContext()->UpdateSubresource(GraphicsDevice::Get()->GetConstantBuffer(), 0, nullptr, &constantBuffer, 0, 0);
 
     spriteBatch = new SpriteBatch(GraphicsDevice::GetContext());
+    primitiveBatch = new PrimitiveBatch<VertexPositionColor>(
+        GraphicsDevice::GetContext(),
+        2048 * 3,
+        2048);
 
     hr = CreateDDSTextureFromFile(
         GraphicsDevice::GetDevice(),
@@ -216,6 +220,7 @@ void Renderer::PrepareFrame()
     GraphicsDevice::GetContext()->UpdateSubresource(GraphicsDevice::Get()->GetConstantBuffer(), 0, nullptr, &constantBuffer, 0, 0);
     
     spriteBatch->Begin();
+    primitiveBatch->Begin();
 
 
     RECT rect = RECT();
@@ -229,6 +234,7 @@ void Renderer::PrepareFrame()
 
 void Renderer::PresentFrame()
 {
+    primitiveBatch->End();
     spriteBatch->End();
     GraphicsDevice::Get()->GetSwapChain()->Present(0, 0);
 }
@@ -249,6 +255,8 @@ void Renderer::PrepareGeometryRender()
 
     GraphicsDevice::GetContext()->PSSetConstantBuffers(0, 1, &buffer);
     GraphicsDevice::GetContext()->VSSetConstantBuffers(0, 1, &buffer);
+
+
 }
 
 void Renderer::Render_Impl(Particle* particle)

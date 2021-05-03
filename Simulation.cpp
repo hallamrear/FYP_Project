@@ -267,22 +267,9 @@ void Simulation::Update(float DeltaTime)
 			}
 		}
 
-		ApplyForceToParticle(particleSystem->LivingParticles[i], &allLocalParticles);
+		//ApplyForceToParticle(particleSystem->LivingParticles[i], &allLocalParticles);
 
 		particleSystem->LivingParticles[i]->Update(DeltaTime);
-
-		for (int x = 0; x < 4; x++)
-		{
-			c2Manifold manifold;
-
-			c2CircletoAABBManifold(particleSystem->ParticlePool[i]->GetCollider(), walls[x], &manifold);
-
-			if(c2CircletoAABB(particleSystem->ParticlePool[i]->GetCollider(), walls[x]))
-			{
-				OutputDebugStringA("Collision");
-			}
-		}
-
 	}
 
 	//Call only seems to update instances
