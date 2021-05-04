@@ -13,11 +13,20 @@ public:
 
 	GridCell()
 	{
+		particles = std::vector<Particle*>();
+		neighbours = std::vector<GridCell*>();
 
+		neighbours.clear();
+		particles.clear();
 	}
 
 	GridCell(Vector2i ID)
 	{
+		particles = std::vector<Particle*>();
+		neighbours = std::vector<GridCell*>();
+
+		neighbours.clear();
+		particles.clear();
 
 	}
 };

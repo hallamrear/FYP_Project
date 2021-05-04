@@ -253,11 +253,12 @@ float Simulation::ViscoKernel(float radius)
 
 void Simulation::Render()
 {
+	grid->RenderGrid();
+	particleSystem->Render();
+
 	if (particleSystem->livingParticleCount > 0)
-	{
-		grid->RenderGrid();
-		//grid->RenderMarchingSquares();
-		particleSystem->Render();
+	{		
+		grid->RenderMarchingSquares();
 	}
 
 }

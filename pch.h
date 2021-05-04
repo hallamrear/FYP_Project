@@ -41,7 +41,7 @@ using std::string;
 #define PARTICLE_SEARCH_DISTANCE (1.5F * PARTICLE_COLLIDER_SIZE)
 #define WORLD_SIZE Vector2f(1000.0f, 1000.0f)
 #define GRID_SIZE Vector2i(20, 20)
-#define WORLD_EDGE 100.0f
+#define WORLD_EDGE 105.0f
 
 
 //Simulation stuff

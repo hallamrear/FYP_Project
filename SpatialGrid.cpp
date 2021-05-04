@@ -39,44 +39,69 @@ void SpatialGrid::PopulateCellsWithNeighbours(Vector2i cellPos, GridCell* cellTo
 	if (cellPos.y == 0 || cellPos.y == gridSize.y)
 		return;
 
+	int ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y - 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y - 1))];
-	cellToPopulate->neighbours.push_back(cell);
-
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y - 1))];
-	cellToPopulate->neighbours.push_back(cell);
-
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y - 1))];
-	cellToPopulate->neighbours.push_back(cell);
-
-
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y))];
-	cellToPopulate->neighbours.push_back(cell);
-
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y))];
-	cellToPopulate->neighbours.push_back(cell);
-
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y))];
-	cellToPopulate->neighbours.push_back(cell);
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y - 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
 
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y - 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y + 1))];
-	cellToPopulate->neighbours.push_back(cell);
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y + 1))];
-	cellToPopulate->neighbours.push_back(cell);
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
-	cell = &cells[CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y + 1))];
-	cellToPopulate->neighbours.push_back(cell);
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y + 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x, cellPos.y + 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 
-
-
-
-
-
+	ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x + 1, cellPos.y + 1));
+	if (ID != INT_MAX)
+	{
+		cell = &cells[ID];
+		cellToPopulate->neighbours.push_back(cell);
+	}
 }
 
 SpatialGrid::SpatialGrid(Vector2i grid_size, Vector2f cell_size)
@@ -87,11 +112,16 @@ SpatialGrid::SpatialGrid(Vector2i grid_size, Vector2f cell_size)
 
 	cells = new GridCell[totalCells];
 
+	GridCell* cell;
+
 	for (int y = 0; y < gridSize.y; y++)
 	{
 		for (int x = 0; x < gridSize.x; x++)
 		{
-			PopulateCellsWithNeighbours(Vector2i(x, y), &cells[CalculateArrayIDFromCellPos(Vector2i(x, y))]);
+			if (CalculateArrayIDFromCellPos(Vector2i(x, y)) != INT_MAX)
+			{
+				PopulateCellsWithNeighbours(Vector2i(x, y), &cells[CalculateArrayIDFromCellPos(Vector2i(x, y))]);
+			}
 		}
 	}
 }
@@ -125,6 +155,7 @@ void SpatialGrid::ClearCells()
 	for (int i = 0; i < totalCells; i++)
 	{
 		cells[i].particles.clear();
+		cells[i].neighbours.clear();
 	}
 }
 
@@ -144,7 +175,7 @@ int SpatialGrid::CalculateArrayIDFromCellPos(Vector2i cell_pos)
 		cell_pos.y > 0 &&
 		cell_pos.y < gridSize.y)
 	{
-		if ((cell_pos.x * gridSize.y) + cell_pos.y > 10000 && (cell_pos.x * gridSize.y) + cell_pos.y != INT_MAX)
+		if ((cell_pos.y * gridSize.x) + cell_pos.x > totalCells && (cell_pos.y * gridSize.x) + cell_pos.x != INT_MAX)
 		{
 			//IF STILL BROKE RETURN IT TO (cell_pos.x * gridSize.y) + cell_pos.y
 			OutputDebugStringA("asdasd");
@@ -339,8 +370,6 @@ int SpatialGrid::CalculateWeights(int i, int j)
 	int d = 0;
 
 	float TL = 0.0f, TR = 0.0f, BL = 0.0f, BR = 0.0f;
-
-
 
 	//TL = cell->neighbours[0]->GetPointW + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
 	//TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;

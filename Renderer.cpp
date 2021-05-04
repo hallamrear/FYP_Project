@@ -60,8 +60,11 @@ void Renderer::Render_Impl(sf::Shape* shape)
 void Renderer::Render_Impl(Particle* particle)
 {
     sf::CircleShape shape;
-    shape.setPosition(particle->GetModel()->position.x, particle->GetModel()->position.y);
-    shape.setRadius(particle->GetColliderRadius());
+
+    float r = particle->GetColliderRadius();
+
+    shape.setPosition(particle->GetModel()->position.x - (r/2), particle->GetModel()->position.y - (r));
+    shape.setRadius(r);
     shape.setOutlineThickness(2.0f);
     shape.setOutlineColor(sf::Color::Red);
     shape.setFillColor(sf::Color::Transparent);

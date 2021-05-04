@@ -33,8 +33,7 @@ void Particle::CreateRandom()
 
 	model.velocity.x = (float)(rand() % (int)(WORLD_SIZE.x) + 1) - (WORLD_SIZE.x / 2.0f);
 	model.velocity.y = (float)(rand() % (int)(WORLD_SIZE.y) + 1) - (WORLD_SIZE.y / 2.0f);
-
-
+	
 	isAlive = true;
 }
 
@@ -64,13 +63,12 @@ void Particle::ResolveCollision(Particle* particle)
 	if (this == particle)
 		return;
 
-	//COLLISION RESPONSE
-	// normalise the vector between them
+	////COLLISION RESPONSE
+	//// normalise the vector between them
 	Vector2f distance = model.position - particle->GetModel()->position;
 	float sumOfRadii = colliderRadius + particle->colliderRadius;
-	float length = distance.GetLength();
-
-	Vector2f normalisedDistance = Vector2f(distance.x / length, distance.y / length);
+	float length = abs(distance.GetLength());
+	Vector2f normalisedDistance = distance.GetNormalized();
 
 	model.position.x = particle->GetModel()->position.x + ((sumOfRadii + 1) * normalisedDistance.x);
 	model.position.y = particle->GetModel()->position.y + ((sumOfRadii + 1) * normalisedDistance.y);
@@ -85,8 +83,9 @@ void Particle::ResolveCollision(Particle* particle)
 	newVelTwo.x = (particle->GetModel()->velocity.x * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
 	newVelTwo.y = (particle->GetModel()->velocity.y * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
 
-	GetModel()->velocity = newVelOne;
-	particle->GetModel()->velocity = newVelTwo;
+	GetModel()->velocity = newVelOne * 0.95f;
+	particle->GetModel()->velocity = newVelTwo * 0.95f;
+
 }
 
 float Particle::GetColliderRadius()

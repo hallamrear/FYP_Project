@@ -15,6 +15,7 @@ PhysicsModel::PhysicsModel()
 	initialDensity = density = 10.0f;
 	viscosity = 10.0f;
 	mass = 100.0f;
+
 	pressure = 5.0f;
 
 	Reset();
@@ -42,25 +43,24 @@ void PhysicsModel::ApplyExternalForce(Vector2f force)
 
 void PhysicsModel::Update(float DeltaTime)
 {
-
 	if (position.x < WORLD_EDGE || position.x > WORLD_SIZE.x - WORLD_EDGE)
 	{
 		if (position.x < WORLD_EDGE)
-			position.x = WORLD_EDGE + 0.1f;
+			position.x = WORLD_EDGE + 1.0f;
 		else
-			position.x = WORLD_SIZE.x - WORLD_EDGE - 0.1f;
+			position.x = WORLD_SIZE.x - WORLD_EDGE - 1.0f;
 
-		velocity.x *= -0.95f;
+		velocity.x *= -0.9f;
 	}
 
 	if (position.y < WORLD_EDGE || position.y > WORLD_SIZE.y - WORLD_EDGE)
 	{
 		if (position.y < WORLD_EDGE)
-			position.y = WORLD_EDGE + 0.1f;
+			position.y = WORLD_EDGE + 1.0f;
 		else
-			position.y = WORLD_SIZE.y - WORLD_EDGE - 0.1f;
+			position.y = WORLD_SIZE.y - WORLD_EDGE - 1.0f;
 
-		velocity.y *= -0.95f;
+		velocity.y *= -0.9f;
 	}
 
 	Vector2f netforce = Vector2f(0.0f, 0.0f);
@@ -80,6 +80,9 @@ void PhysicsModel::Update(float DeltaTime)
 	netforce += weight;
 	netforce += externalForce;
 
+	acceleration.x = (-velocity.x * 0.8f);
+	acceleration.y = (-velocity.y * 0.8f);
+
 	if (netforce != Vector2f(0.0f, 0.0f))
 	{
 		acceleration.x = netforce.x / mass;
@@ -91,10 +94,14 @@ void PhysicsModel::Update(float DeltaTime)
 	position.x += velocity.x * DeltaTime;
 	position.y += velocity.y * DeltaTime;
 	
-	if (velocity.x < VELOCITY_THRESHOLD && velocity.x > (-1 * VELOCITY_THRESHOLD))
+	if (fabs(velocity.x * velocity.x + velocity.y * velocity.y) < VELOCITY_THRESHOLD)
+	{
 		velocity.x = 0.0f;
-	if (velocity.y < VELOCITY_THRESHOLD && velocity.y > (-1 * VELOCITY_THRESHOLD))
 		velocity.y = 0.0f;
+	}
+
+
+
 
 	if (velocity == Vector2f(0.0F, 0.0F))
 		isResting = true;

@@ -83,10 +83,6 @@ void Application::HandleMouseInput(float DeltaTime)
 	mouseWindowPos.x = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).x;
 	mouseWindowPos.y = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).y;
 
-
-
-
-
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
 		simulation->AddParticle(mouseWindowPos);
