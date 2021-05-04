@@ -7,6 +7,7 @@
 #ifndef PCH_H
 #define PCH_H
 
+#define NOMINMAX
 #include "framework.h"
 
 #define _USE_MATH_DEFINES
@@ -31,39 +32,26 @@
 #include <cmath>
 #include <algorithm>
 
-//DirectX11
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "D3DCompiler.lib")
-#include <d3d11_1.h>
-#include <d3dcompiler.h>
-#include <directxmath.h>
-#include <directxcolors.h>
-
-//DirectXTK
-#include "Audio.h"
-#include "CommonStates.h"
-#include "DDSTextureLoader.h"
-#include "Effects.h"
-#include "GamePad.h"
-#include "GeometricPrimitive.h"
-#include "Keyboard.h"
-#include "Model.h"
-#include "Mouse.h"
-#include "PrimitiveBatch.h"
-#include "SimpleMath.h"
-#include "SpriteBatch.h"
-#include "SpriteFont.h"
-#include "VertexTypes.h"
-
 //namespaces
-using namespace DirectX;
 using std::string;
 
-#define PARTICLE_COUNT 250
-#define PARTICLE_SEARCH_DISTANCE 5.0f
-#define WORLD_SIZE XMFLOAT2(1000, 1000)
-#define GRID_SIZE XMINT2(100, 100)
+#define STARTING_PARTICLE_COUNT 2
+#define MAX_PARTICLE_COUNT 500
+#define PARTICLE_COLLIDER_SIZE 16.0f
+#define PARTICLE_SEARCH_DISTANCE (1.5F * PARTICLE_COLLIDER_SIZE)
+#define WORLD_SIZE Vector2f(1000.0f, 1000.0f)
+#define GRID_SIZE Vector2i(20, 20)
 #define WORLD_EDGE 100.0f
+
+
+//Simulation stuff
+#define KERNEL_HEIGHT 10.0f
+#define GRAVITY Vector2f(0.0f, 10 * 9.81f)
+#define VELOCITY_THRESHOLD 1.0f
+#define GAS_CONSTANT  8.314
+#define REST_DENSITY 10.0f
+#define VISCOSITY_CONSTANT 5.0f
+
 
 // When you are using pre-compiled headers, this source file is necessary for compilation to succeed.
 

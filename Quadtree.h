@@ -1,4 +1,6 @@
 #pragma once
+#include "Vector.h"
+
 class Particle;
 
 class TreeBoundary
@@ -9,7 +11,7 @@ public:
 	int pos_x = 0;
 	int pos_y = 0;
 
-	XMFLOAT2 center;
+	Vector2f center;
 
 	TreeBoundary()
 	{
@@ -23,7 +25,7 @@ public:
 		center.y = pos_y + (height / 2);
 	}
 
-	bool Contains(XMFLOAT2 position)
+	bool Contains(Vector2f position)
 	{
 		//Edge collision detection
 		if (position.x < pos_x + width && position.x > pos_x - width &&

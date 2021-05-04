@@ -51,9 +51,6 @@
     <ClInclude Include="PhysicsModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Simulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,7 +66,7 @@
     <ClInclude Include="Collisions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cute_c2.h">
+    <ClInclude Include="Vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -101,9 +98,6 @@
     <ClCompile Include="PhysicsModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Vertex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Simulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -111,6 +105,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SpatialGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

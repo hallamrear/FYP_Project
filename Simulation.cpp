@@ -7,36 +7,12 @@
 
 Simulation::Simulation(
 	int particle_count,
-	float particle_neighbour_distance,
-	XMFLOAT2 world_size,
-	XMINT2 grid_size)
+	Vector2f world_size,
+	Vector2i grid_size)
 {
-
-	//top
-	walls[0].max.x = WORLD_SIZE.x;
-	walls[0].max.y = 0.0f;
-	walls[0].min.x = 0.0f;
-	walls[0].min.y = WORLD_EDGE;
-	//bottom
-	walls[1].max.x = WORLD_SIZE.x;
-	walls[1].max.y = WORLD_EDGE;
-	walls[1].min.x = 0.0f;
-	walls[1].min.y = WORLD_SIZE.y;
-	//left
-	walls[2].max.x = WORLD_EDGE;
-	walls[2].max.y = 0.0f;
-	walls[2].min.x = 0.0f;
-	walls[2].min.y = WORLD_SIZE.y;
-	//right
-	walls[3].max.x = WORLD_SIZE.x;
-	walls[3].max.y = 0.0f;
-	walls[3].min.x = WORLD_SIZE.x - WORLD_EDGE;
-	walls[3].min.y = WORLD_SIZE.y;
-
 	particleCount = particle_count;
-	particleNeighbourSearchRadius = particle_neighbour_distance;
 
-	XMFLOAT2 cellSize;
+	Vector2f cellSize;
 	cellSize.x = world_size.x / grid_size.x;
 	cellSize.y = world_size.y / grid_size.y;
 
@@ -44,9 +20,8 @@ Simulation::Simulation(
 
 	particleSystem = new ParticleSystem(particle_count);
 
-	for (int i = 0; i < particle_count; i++)
+	for (int i = 0; i < STARTING_PARTICLE_COUNT; i++)
 	{
-		particleSystem->GetFreshParticle();
 		grid->Populate(particleSystem->GetFreshParticle());
 	}
 }
@@ -56,40 +31,13 @@ Simulation::~Simulation()
 
 }
 
-//Poly6 Kernel
-float Simulation::Poly6(float radius_square)
-{
-	if (radius_square >= 0.0f && radius_square <= kernalHeight)
-		return 315.0f / (64.0f * M_PI * pow(kernalHeight, 9)) * pow(kernalHeight * kernalHeight - radius_square, 3);
-	else
-		return 0.0f;
-}
-
-//Colonel Spikey Mikey
-float Simulation::Spiky(float radius)
-{
-	if (radius >= 0.0f && radius <= kernalHeight)
-		return 15.0f / (M_PI * pow(kernalHeight, 6)) * pow(kernalHeight - radius, 3);
-	else
-		return 0.0f;
-}
-
-float Simulation::ViscoKernel(float radius)
-{
-	if (radius >= 0.0f && radius <= kernalHeight)
-		return 15.0f / (2 * M_PI * pow(kernalHeight, 3)) * (0.0f - ((radius * radius * radius) / (2 * (kernalHeight * kernalHeight* kernalHeight))) + ((radius * radius) / (kernalHeight * kernalHeight)) + (kernalHeight / (2 * radius)) - 1);
-	else
-		return 0.0f;
-}
-
-
 float Simulation::CalculateParticlePressure(Particle* particle, std::vector<Particle*>* locals)
 {
 	float FocussedParticleLocalPressure = GAS_CONSTANT * particle->GetModel()->density;
 	//Pressure for particle i = weighted of surrounding
 	float pressureSum = 0.0f;
 	float dist = 0.0f;
-	XMFLOAT2 diff;
+	Vector2f diff;
 
 	//Pressure Calculation
 	int size = locals->size();
@@ -113,7 +61,7 @@ float Simulation::CalculateParticleDensity(Particle* particle, std::vector<Parti
 {
 	float DensitySum = 0.0f;
 	float dist = 0.0f;
-	XMFLOAT2 diff;
+	Vector2f diff;
 
 	//Density Calculation
 	int size = locals->size();
@@ -124,7 +72,7 @@ float Simulation::CalculateParticleDensity(Particle* particle, std::vector<Parti
 			diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
 			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
 
-			DensitySum += locals->at(particleCount)->GetModel()->mass * Poly6(dist * dist);
+			DensitySum += locals->at(particleCount)->GetModel()->mass * Poly6(dist);
 		}
 	}
 
@@ -135,7 +83,7 @@ float Simulation::CalculateParticleViscosity(Particle* particle, std::vector<Par
 {
 	float ViscositySum = 0.0f;
 	float dist = 0.0f;
-	XMFLOAT2 diff;
+	Vector2f diff;
 	float mew = 0.0f;
 
 	//Viscosity Calculation
@@ -153,9 +101,9 @@ void Simulation::ApplyForceToParticle(Particle* particle, std::vector<Particle*>
 {
 
 	float dist = 0.0f;
-	XMFLOAT2 diff = XMFLOAT2();
-	XMFLOAT2 pressureForce = XMFLOAT2();
-	XMFLOAT2 viscForce = XMFLOAT2();
+	Vector2f diff = Vector2f();
+	Vector2f pressureForce = Vector2f();
+	Vector2f viscForce = Vector2f();
 
 	int size = locals->size();
 	for (int particleCount = 0; particleCount < size; particleCount++)
@@ -167,7 +115,6 @@ void Simulation::ApplyForceToParticle(Particle* particle, std::vector<Particle*>
 		{
 			diff.x /= dist;
 			diff.y /= dist;
-
 
 			pressureForce += diff * particle->GetModel()->mass * (particle->GetModel()->pressure);
 
@@ -198,7 +145,7 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 			//Check all their particles if theyre in the smoothing radius
 			for (int j = 0; j < cell->neighbours[i]->particles.size(); j++)
 			{
-				if (Collisions::IsPointInCircle(cell->neighbours[i]->particles[j]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
+				if (Collisions::CircleInCircle(cell->neighbours[i]->particles[j]->GetModel()->position, PARTICLE_SEARCH_DISTANCE, particle->GetModel()->position, PARTICLE_SEARCH_DISTANCE))
 				{
 					locals->push_back(cell->neighbours[i]->particles[j]);
 				}
@@ -208,9 +155,9 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 		//Check your cells particles too
 		for (int k = 0; k < cell->particles.size(); k++)
 		{
-			if (Collisions::IsPointInCircle(cell->particles[k]->GetModel()->position, particle->GetModel()->position, particleNeighbourSearchRadius))
+			if (Collisions::CircleInCircle(cell->particles[k]->GetModel()->position, PARTICLE_SEARCH_DISTANCE, particle->GetModel()->position, PARTICLE_SEARCH_DISTANCE))
 			{
-					locals->push_back(cell->particles[k]);
+				locals->push_back(cell->particles[k]);
 			}
 		}
 
@@ -218,11 +165,17 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 	}
 }
 
-void Simulation::AddParticle(XMINT2 mouseLocation)
+void Simulation::AddParticle(Vector2i mouseLocation)
 {
 	Particle* particle = particleSystem->GetFreshParticle();
 	particle->GetModel()->position.x = mouseLocation.x;
 	particle->GetModel()->position.y = mouseLocation.y;
+}
+
+void Simulation::RemoveParticle(Vector2i mouseLocation)
+{
+	if(particleSystem->livingParticleCount > 0)
+		particleSystem->KillParticle(particleSystem->LivingParticles.back());
 }
 
 void Simulation::Update(float DeltaTime)
@@ -255,28 +208,56 @@ void Simulation::Update(float DeltaTime)
 
 		GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->LivingParticles[i]);
 
-		particleSystem->LivingParticles[i]->GetModel()->density = CalculateParticleDensity(particleSystem->LivingParticles[i], &allLocalParticles);
-		particleSystem->LivingParticles[i]->GetModel()->pressure = CalculateParticlePressure(particleSystem->LivingParticles[i], &allLocalParticles);
-		particleSystem->LivingParticles[i]->GetModel()->viscosity = CalculateParticleViscosity(particleSystem->LivingParticles[i], &allLocalParticles);
+		particleSystem->LivingParticles[i]->GetModel()->LocalParticles = allLocalParticles;
 
 		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
-			if(c2CircletoCircle(particleSystem->LivingParticles[i]->GetCollider(), allLocalParticles[neighbours]->GetCollider()))
+			if(Collisions::CircleInCircle(
+				particleSystem->LivingParticles[i]->GetModel()->position, particleSystem->LivingParticles[i]->GetColliderRadius(),
+				allLocalParticles[neighbours]->GetModel()->position, allLocalParticles[neighbours]->GetColliderRadius()))
 			{
 				particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
 			}
 		}
 
-		//ApplyForceToParticle(particleSystem->LivingParticles[i], &allLocalParticles);
-
 		particleSystem->LivingParticles[i]->Update(DeltaTime);
 	}
 
-	//Call only seems to update instances
-	//particleSystem->Update(DeltaTime);
+}
+
+//Poly6 Kernel
+float Simulation::Poly6(float radius_square)
+{
+	if (radius_square >= 0.0f && radius_square <= KERNEL_HEIGHT)
+		return 315.0f / (64.0f * M_PI * pow(KERNEL_HEIGHT, 9)) * pow(KERNEL_HEIGHT * KERNEL_HEIGHT - radius_square, 3);
+	else
+		return 0.0f;
+}
+
+//Colonel Spikey Mikey
+float Simulation::Spiky(float radius)
+{
+	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
+		return 15.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
+	else
+		return 0.0f;
+}
+
+float Simulation::ViscoKernel(float radius)
+{
+	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
+		return 15.0f / (2 * M_PI * pow(KERNEL_HEIGHT, 3)) * (0.0f - ((radius * radius * radius) / (2 * (KERNEL_HEIGHT * KERNEL_HEIGHT * KERNEL_HEIGHT))) + ((radius * radius) / (KERNEL_HEIGHT * KERNEL_HEIGHT)) + (KERNEL_HEIGHT / (2 * radius)) - 1);
+	else
+		return 0.0f;
 }
 
 void Simulation::Render()
 {
-	particleSystem->Render();
+	if (particleSystem->livingParticleCount > 0)
+	{
+		grid->RenderGrid();
+		//grid->RenderMarchingSquares();
+		particleSystem->Render();
+	}
+
 }

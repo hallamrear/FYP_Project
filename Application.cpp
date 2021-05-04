@@ -4,6 +4,7 @@
 #include "Renderer.h"
 
 #include "Simulation.h"
+#include "SFML\System.hpp"
 
 //TODO : REMOVE
 #include <debugapi.h>
@@ -16,7 +17,7 @@ Application::Application(float width, float height)
 	isRunning = false;
 	isInitialised = false;
 
-	mouseDelta = XMFLOAT2();
+	mouseDelta = Vector2f();
 }
 
 Application::~Application()
@@ -40,31 +41,18 @@ void Application::SetRunning(bool state)
 	isRunning = true;
 }
 
-bool Application::Init(HINSTANCE instance, HWND window)
+bool Application::Init()
 {
-	Win32Instance = instance;
-	Win32Window = window;
-
-
-	if (Renderer::Get()->Init(instance, window, windowWidth, windowHeight) != S_OK)
+	if (Renderer::Get()->Init(windowWidth, windowHeight) != S_OK)
 	{
 		isInitialised = false;
 		return isInitialised;
 	}
 
 	simulation = new Simulation(
-		PARTICLE_COUNT,
-		PARTICLE_SEARCH_DISTANCE,
+		MAX_PARTICLE_COUNT,
 		WORLD_SIZE,
 		GRID_SIZE);
-
-
-	keyboardController = std::make_unique<DirectX::Keyboard>();
-	mouseController = std::make_unique<DirectX::Mouse>();
-	mouseController->SetWindow(window);
-	mouseController->SetMode(Mouse::MODE_RELATIVE);
-
-	auto state = mouseController->GetState();
 
 	isInitialised = true;
 	return isInitialised;
@@ -75,41 +63,51 @@ void Application::Shutdown()
 
 }
 
-void Application::UpdateMouseInputDetails(int posX, int posY, DWORD flags)
+void Application::UpdateMouseInputDetails(int posX, int posY)
 {
 	mouseWindowPos.x = posX;
 	mouseWindowPos.y = posY;
-	mouseFlags = flags;
 }
 
 void Application::HandleKeyboardInput(float DeltaTime)
 {
 	//TODO : implement
 	if (GetAsyncKeyState(VK_SPACE))
+	{
 		simulation->AddParticle(mouseWindowPos);
-
-	if (GetAsyncKeyState(VK_LEFT))
-		Renderer::Get()->AlterViewPosition(XMFLOAT2(-100.0f * DeltaTime, 0.0f));
-
-	if (GetAsyncKeyState(VK_RIGHT))
-		Renderer::Get()->AlterViewPosition(XMFLOAT2(100.0f * DeltaTime, 0.0f));
-
-	if (GetAsyncKeyState(VK_UP))
-		Renderer::Get()->AlterViewPosition(XMFLOAT2(0.0f, 100.0f * DeltaTime));
-
-	if (GetAsyncKeyState(VK_DOWN))
-		Renderer::Get()->AlterViewPosition(XMFLOAT2(0.0f, -100.0f * DeltaTime));
+	}
 }
 
 void Application::HandleMouseInput(float DeltaTime)
 {
-	//TODO : implement
-	//std::string str = "WinPosX " + std::to_string(mouseWindowPos.x) + " WinPosY " + std::to_string(mouseWindowPos.y) + '\n';
-	//OutputDebugStringA(str.c_str());
+	mouseWindowPos.x = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).x;
+	mouseWindowPos.y = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).y;
+
+
+
+
+
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		simulation->AddParticle(mouseWindowPos);
+	}
+	
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+	{
+		simulation->RemoveParticle(mouseWindowPos);
+	}
+
 }
 
 void Application::Update(float DeltaTime)
 {
+	sf::Event event;
+	while (GraphicsDevice::GetWindow()->pollEvent(event))
+	{
+		if (event.type == sf::Event::Closed)
+			GraphicsDevice::GetWindow()->close();
+	}
+
 	HandleMouseInput(DeltaTime);
 	HandleKeyboardInput(DeltaTime);
 

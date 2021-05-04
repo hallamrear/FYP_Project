@@ -1,5 +1,5 @@
 #pragma once
-#define CUTE_C2_IMPLEMENTATION
+#include "Vector.h"
 
 class Simulation;
 
@@ -10,12 +10,8 @@ class Application
 	float windowWidth;
 	float windowHeight;
 
-	XMINT2 mouseWindowPos;
-	XMFLOAT2 mouseDelta;
-	DWORD mouseFlags;
-
-	std::unique_ptr<Mouse> mouseController;
-	std::unique_ptr<Keyboard> keyboardController;
+	Vector2i mouseWindowPos;
+	Vector2f mouseDelta;
 
 	HINSTANCE Win32Instance;
 	HWND Win32Window;
@@ -26,10 +22,10 @@ public:
 	Application(float width, float height);
 	~Application();
 
-	bool Init(HINSTANCE hInst, HWND window);
+	bool Init();
 	void Shutdown();
 
-	void UpdateMouseInputDetails(int posX, int posY, DWORD flags);
+	void UpdateMouseInputDetails(int posX, int posY);
 
 	void HandleKeyboardInput(float DeltaTime);
 	void HandleMouseInput(float DeltaTime);

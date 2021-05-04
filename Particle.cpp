@@ -5,25 +5,11 @@
 #include "Overloads.h"
 #include "Device.h"
 
-ID3D11Resource* Particle::textureResource;
-ID3D11ShaderResourceView* Particle::texture;
-
 Particle::Particle()
 {
 	srand(time(0));
 
-	if (texture == nullptr && textureResource == nullptr)
-	{
-		CreateDDSTextureFromFile(
-			GraphicsDevice::GetDevice(),
-			L"Resources/Particle.dds",
-			&textureResource,
-			&texture);
-	}
-
-	circleCollider = c2Circle();
-	circleCollider.r = 2.0f;
-	colliderRadius = circleCollider.r;
+	colliderRadius = PARTICLE_COLLIDER_SIZE;
 
 	Kill();
 }
@@ -37,9 +23,6 @@ void Particle::Create()
 {
 	model = PhysicsModel();
 
-	circleCollider.p.x = model.position.x;
-	circleCollider.p.y = model.position.y;
-
 	isAlive = true;
 }
 
@@ -48,11 +31,9 @@ void Particle::CreateRandom()
 	model.position.x = (float)(rand() % (int)WORLD_SIZE.x + 1);
 	model.position.y = (float)(rand() % (int)WORLD_SIZE.y + 1);
 
-	model.velocity.x = (float)(rand() % (int)(WORLD_SIZE.x / 2) + 1);
-	model.velocity.y = (float)(rand() % (int)(WORLD_SIZE.y / 2) + 1);
+	model.velocity.x = (float)(rand() % (int)(WORLD_SIZE.x) + 1) - (WORLD_SIZE.x / 2.0f);
+	model.velocity.y = (float)(rand() % (int)(WORLD_SIZE.y) + 1) - (WORLD_SIZE.y / 2.0f);
 
-	circleCollider.p.x = model.position.x;
-	circleCollider.p.y = model.position.y;
 
 	isAlive = true;
 }
@@ -78,17 +59,39 @@ PhysicsModel* Particle::GetModel()
 	return &model;
 }
 
-c2Circle Particle::GetCollider()
-{
-	return circleCollider;
-}
-
 void Particle::ResolveCollision(Particle* particle)
 {
 	if (this == particle)
 		return;
 
-	
+	//COLLISION RESPONSE
+	// normalise the vector between them
+	Vector2f distance = model.position - particle->GetModel()->position;
+	float sumOfRadii = colliderRadius + particle->colliderRadius;
+	float length = distance.GetLength();
+
+	Vector2f normalisedDistance = Vector2f(distance.x / length, distance.y / length);
+
+	model.position.x = particle->GetModel()->position.x + ((sumOfRadii + 1) * normalisedDistance.x);
+	model.position.y = particle->GetModel()->position.y + ((sumOfRadii + 1) * normalisedDistance.y);
+
+	//PHYSICS RESPONSE
+	//2d elastic collision
+	Vector2f newVelOne;
+	Vector2f newVelTwo;
+
+	newVelOne.x = (GetModel()->velocity.x * (GetModel()->mass - particle->GetModel()->mass) + (2 * particle->GetModel()->mass * particle->GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
+	newVelOne.y = (GetModel()->velocity.y * (GetModel()->mass - particle->GetModel()->mass) + (2 * particle->GetModel()->mass * particle->GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
+	newVelTwo.x = (particle->GetModel()->velocity.x * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
+	newVelTwo.y = (particle->GetModel()->velocity.y * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
+
+	GetModel()->velocity = newVelOne;
+	particle->GetModel()->velocity = newVelTwo;
+}
+
+float Particle::GetColliderRadius()
+{
+	return colliderRadius;
 }
 
 void Particle::Update(float DeltaTime)
@@ -97,12 +100,4 @@ void Particle::Update(float DeltaTime)
 		return;
 
 	model.Update(DeltaTime);
-
-	circleCollider.p.x = model.position.x;
-	circleCollider.p.y = model.position.y;
-}
-
-ID3D11ShaderResourceView* Particle::GetTexture()
-{
-	return texture;
 }

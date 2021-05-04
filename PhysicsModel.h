@@ -1,32 +1,32 @@
 #pragma once
-#define GRAVITY XMFLOAT2(0.0f, 9.81f)
-#define VELOCITY_THRESHOLD 1.0f
-#define GAS_CONSTANT 8.314
-#define VISCOSITY_CONSTANT 100.0f
+#include "Vector.h"
+
+class Particle;
 
 class PhysicsModel
 {
 private:
 	bool isResting;
-	XMFLOAT2 previousPosition;
+	Vector2f previousPosition;
 
 	float initialDensity;
 
 public:
 	PhysicsModel();
-	PhysicsModel(XMFLOAT2 position, XMFLOAT2 velocity);
+	PhysicsModel(Vector2f position, Vector2f velocity);
+	std::vector<Particle*> LocalParticles;
 
 	//TODO : CREATE GETTERS AND SETTERS	
-	XMFLOAT2 position;
-	XMFLOAT2 acceleration;
-	XMFLOAT2 velocity;
-	XMFLOAT2 externalForce;
+	Vector2f position;
+	Vector2f acceleration;
+	Vector2f velocity;
+	Vector2f externalForce;
 	float density;
 	float pressure;
 	float viscosity;
 	float mass;
 
-	void ApplyExternalForce(XMFLOAT2 force);
+	void ApplyExternalForce(Vector2f force);
 	void Update(float DeltaTime);
 	void Reset();
 };

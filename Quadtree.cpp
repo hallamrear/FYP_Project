@@ -83,11 +83,6 @@ void Quadtree::Update(float DeltaTime)
 
 void Quadtree::Render()
 {
-	Renderer::Get()->PrepareGeometryRender();
-
-	//TODO : RENDER
-
-
 	if (isDivided)
 	{
 		this->topRight->Render();
