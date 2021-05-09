@@ -71,10 +71,9 @@ void Application::UpdateMouseInputDetails(int posX, int posY)
 
 void Application::HandleKeyboardInput(float DeltaTime)
 {
-	//TODO : implement
 	if (GetAsyncKeyState(VK_SPACE))
 	{
-		simulation->AddParticle(mouseWindowPos);
+		simulation->ToggleIsRunning();
 	}
 }
 
@@ -92,7 +91,6 @@ void Application::HandleMouseInput(float DeltaTime)
 	{
 		simulation->RemoveParticle(mouseWindowPos);
 	}
-
 }
 
 void Application::Update(float DeltaTime)

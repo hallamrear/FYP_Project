@@ -8,9 +8,7 @@
 Particle::Particle()
 {
 	srand(time(0));
-
 	colliderRadius = PARTICLE_COLLIDER_SIZE;
-
 	Kill();
 }
 
@@ -67,7 +65,7 @@ void Particle::ResolveCollision(Particle* particle)
 	//// normalise the vector between them
 	Vector2f distance = model.position - particle->GetModel()->position;
 	float sumOfRadii = colliderRadius + particle->colliderRadius;
-	float length = abs(distance.GetLength());
+	float length = distance.GetLength();
 	Vector2f normalisedDistance = distance.GetNormalized();
 
 	model.position.x = particle->GetModel()->position.x + ((sumOfRadii + 1) * normalisedDistance.x);

@@ -155,7 +155,6 @@ void SpatialGrid::ClearCells()
 	for (int i = 0; i < totalCells; i++)
 	{
 		cells[i].particles.clear();
-		cells[i].neighbours.clear();
 	}
 }
 
@@ -212,9 +211,15 @@ void SpatialGrid::RenderGrid()
 			position.x = x * cellSize.x;
 			position.y = y * cellSize.y;
 
-			if (cells[(x * gridSize.y) + y].particles.size() == 0)
-				shape.setFillColor(sf::Color::Transparent);
-			else
+			shape.setFillColor(sf::Color::Transparent);
+
+			for (int n = 0; n < cells[(x * gridSize.y) + y].neighbours.size(); n++)
+			{
+				if (cells[(x * gridSize.y) + y].neighbours[n]->particles.size() != 0)
+					shape.setFillColor(sf::Color::Cyan);
+			}
+
+			if (cells[(x * gridSize.y) + y].particles.size() != 0)
 				shape.setFillColor(sf::Color::Blue);
 
 			shape.setPosition(position);

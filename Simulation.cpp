@@ -24,6 +24,8 @@ Simulation::Simulation(
 	{
 		grid->Populate(particleSystem->GetFreshParticle());
 	}
+
+	isRunning = true;
 }
 
 Simulation::~Simulation()
@@ -31,103 +33,9 @@ Simulation::~Simulation()
 
 }
 
-float Simulation::CalculateParticlePressure(Particle* particle, std::vector<Particle*>* locals)
+void Simulation::ToggleIsRunning()
 {
-	float FocussedParticleLocalPressure = GAS_CONSTANT * particle->GetModel()->density;
-	//Pressure for particle i = weighted of surrounding
-	float pressureSum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-
-	//Pressure Calculation
-	int size = locals->size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-		if (locals->at(particleCount) != particle)
-		{
-			diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
-			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-
-			//Using spiky kernel as the poly6 gradient is 0 at the centre
-			float localPressure = GAS_CONSTANT * locals->at(particleCount)->GetModel()->density;
-			pressureSum += particle->GetModel()->mass * ((FocussedParticleLocalPressure + localPressure) / (2 * locals->at(particleCount)->GetModel()->density) * Spiky(dist));
-		}
-	}
-
-	return pressureSum;
-}
-
-float Simulation::CalculateParticleDensity(Particle* particle, std::vector<Particle*>* locals)
-{
-	float DensitySum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-
-	//Density Calculation
-	int size = locals->size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-		if (locals->at(particleCount) != particle)
-		{
-			diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
-			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-
-			DensitySum += locals->at(particleCount)->GetModel()->mass * Poly6(dist);
-		}
-	}
-
-	return DensitySum;
-}
-
-float Simulation::CalculateParticleViscosity(Particle* particle, std::vector<Particle*>* locals)
-{
-	float ViscositySum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-	float mew = 0.0f;
-
-	//Viscosity Calculation
-	int size = locals->size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-		diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
-		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-	}
-
-	return mew * ViscositySum;
-}
-
-void Simulation::ApplyForceToParticle(Particle* particle, std::vector<Particle*>* locals)
-{
-
-	float dist = 0.0f;
-	Vector2f diff = Vector2f();
-	Vector2f pressureForce = Vector2f();
-	Vector2f viscForce = Vector2f();
-
-	int size = locals->size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-		diff = locals->at(particleCount)->GetModel()->position - particle->GetModel()->position;
-		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-
-		if (dist != 0.0f)
-		{
-			diff.x /= dist;
-			diff.y /= dist;
-
-			pressureForce += diff * particle->GetModel()->mass * (particle->GetModel()->pressure);
-
-			viscForce += VISCOSITY_CONSTANT * particle->GetModel()->mass *
-				((locals->at(particleCount)->GetModel()->velocity - particle->GetModel()->velocity) / locals->at(particleCount)->GetModel()->pressure) *
-				ViscoKernel(dist);
-		}
-	}
-
-	particle->GetModel()->ApplyExternalForce(pressureForce);
-	particle->GetModel()->ApplyExternalForce(viscForce);
-
-
+	isRunning = !isRunning;
 }
 
 void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Particle* particle)
@@ -180,6 +88,9 @@ void Simulation::RemoveParticle(Vector2i mouseLocation)
 
 void Simulation::Update(float DeltaTime)
 {
+	if (isRunning == false)
+		return;
+
 	grid->ClearCells();
 
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)
@@ -200,10 +111,13 @@ void Simulation::Update(float DeltaTime)
 	ApplyForcesToParticles();
 	*/
 
+
 	std::vector<Particle*> allLocalParticles;
 
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)
 	{
+		particleSystem->LivingParticles[i]->Update(DeltaTime);
+
 		allLocalParticles.clear();
 
 		GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->LivingParticles[i]);
@@ -220,35 +134,8 @@ void Simulation::Update(float DeltaTime)
 			}
 		}
 
-		particleSystem->LivingParticles[i]->Update(DeltaTime);
 	}
 
-}
-
-//Poly6 Kernel
-float Simulation::Poly6(float radius_square)
-{
-	if (radius_square >= 0.0f && radius_square <= KERNEL_HEIGHT)
-		return 315.0f / (64.0f * M_PI * pow(KERNEL_HEIGHT, 9)) * pow(KERNEL_HEIGHT * KERNEL_HEIGHT - radius_square, 3);
-	else
-		return 0.0f;
-}
-
-//Colonel Spikey Mikey
-float Simulation::Spiky(float radius)
-{
-	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
-		return 15.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
-	else
-		return 0.0f;
-}
-
-float Simulation::ViscoKernel(float radius)
-{
-	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
-		return 15.0f / (2 * M_PI * pow(KERNEL_HEIGHT, 3)) * (0.0f - ((radius * radius * radius) / (2 * (KERNEL_HEIGHT * KERNEL_HEIGHT * KERNEL_HEIGHT))) + ((radius * radius) / (KERNEL_HEIGHT * KERNEL_HEIGHT)) + (KERNEL_HEIGHT / (2 * radius)) - 1);
-	else
-		return 0.0f;
 }
 
 void Simulation::Render()

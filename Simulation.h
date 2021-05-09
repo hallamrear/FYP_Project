@@ -9,6 +9,8 @@ enum RENDER_STATE
 
 class Simulation
 {
+	bool isRunning;
+
 	//Simulation Variables
 	int particleCount;
 
@@ -31,6 +33,7 @@ public:
 	Simulation(int particle_count , Vector2f world_size, Vector2i grid_size);
 	~Simulation();
 
+	void ToggleIsRunning();
 
 	void AddParticle(Vector2i mouseLocation);
 	void RemoveParticle(Vector2i mouseLocation);

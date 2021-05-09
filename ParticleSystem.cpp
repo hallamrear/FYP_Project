@@ -29,12 +29,38 @@ ParticleSystem::~ParticleSystem()
 
 }
 
+Particle* ParticleSystem::GetFreshRandomParticle()
+{
+    if (deadParticleCount > 0)
+    {
+        Particle* particle = deadParticlesList->data;
+        particle->CreateRandom();
+        deadParticlesList = LinkedList::DeleteFront(deadParticlesList);
+        LivingParticles.push_back(particle);
+        livingParticleCount++;
+        deadParticleCount--;
+        return particle;
+    }
+    else
+    {
+        int num = rand() % livingParticleCount;
+
+        Particle* particle = LivingParticles[num];
+        particle->Kill();
+        particle->Create();
+
+        return particle;
+    }
+
+    return nullptr;
+}
+
 Particle* ParticleSystem::GetFreshParticle()
 {
     if (deadParticleCount > 0)
     {
         Particle* particle = deadParticlesList->data;
-		particle->CreateRandom();
+		particle->Create();
         deadParticlesList = LinkedList::DeleteFront(deadParticlesList);
 		LivingParticles.push_back(particle);
         livingParticleCount++;

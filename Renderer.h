@@ -21,6 +21,7 @@ private:
 
 	void Render_Impl(Particle* particle);
 	void Render_Impl(sf::Shape* shape);
+	void Render_Impl(sf::Vector2f position, sf::Vector2f direction, float length);
 
 public:
 	Renderer(const Renderer&) = delete;
@@ -34,7 +35,7 @@ public:
 	void PresentFrame();
 
 
-
+	static void Render(sf::Vector2f position, sf::Vector2f direction, float length);
 	static void Render(Particle* particle);
 	static void Render(sf::Shape* particle);
 };

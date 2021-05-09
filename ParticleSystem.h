@@ -22,6 +22,7 @@ public:
 	ParticleSystem(int MaxParticleCount);
 	~ParticleSystem();
 
+	Particle* GetFreshRandomParticle();
 	Particle* GetFreshParticle();
 	void KillParticle(Particle* particle);
 

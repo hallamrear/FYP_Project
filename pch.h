@@ -35,23 +35,29 @@
 //namespaces
 using std::string;
 
-#define STARTING_PARTICLE_COUNT 2
-#define MAX_PARTICLE_COUNT 500
+//Particle Info
+#define DEFAULT_PARTICLE_MASS 50.0f
+#define DEFAULT_PARTICLE_DRAG_COEFFICIENT 0.43f
 #define PARTICLE_COLLIDER_SIZE 16.0f
-#define PARTICLE_SEARCH_DISTANCE (1.5F * PARTICLE_COLLIDER_SIZE)
+#define PARTICLE_SEARCH_DISTANCE (10.0f * PARTICLE_COLLIDER_SIZE)
 #define WORLD_SIZE Vector2f(1000.0f, 1000.0f)
-#define GRID_SIZE Vector2i(20, 20)
-#define WORLD_EDGE 105.0f
-
+#define GRID_SIZE Vector2i(10, 10)
+#define WORLD_EDGE 5.0f
 
 //Simulation stuff
-#define KERNEL_HEIGHT 10.0f
-#define GRAVITY Vector2f(0.0f, 10 * 9.81f)
-#define VELOCITY_THRESHOLD 1.0f
-#define GAS_CONSTANT  8.314
-#define REST_DENSITY 10.0f
-#define VISCOSITY_CONSTANT 5.0f
+#define STARTING_PARTICLE_COUNT 2
+#define MAX_PARTICLE_COUNT 500
+#define KERNEL_HEIGHT M_PI
+#define GRAVITY Vector2f(0.0f, 9.81f)
+#define REST_LENGTH 1.0f
 
+//#define GAS_CONSTANT  8.314
+//#define REST_DENSITY 100.0f
+//#define VISCOSITY_CONSTANT 
+
+#define GAS_CONSTANT  2000.0f
+#define REST_DENSITY 1000.0f
+#define VISCOSITY_CONSTANT 250.0f
 
 // When you are using pre-compiled headers, this source file is necessary for compilation to succeed.
 

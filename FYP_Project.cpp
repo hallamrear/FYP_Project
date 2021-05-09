@@ -7,8 +7,6 @@
 #include "FYP_Project.h"
 #include <windowsx.h>
 
-#define WINDOW_WIDTH 1000
-#define WINDOW_HEIGHT 1000
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -23,7 +21,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // TODO: Place code here.
     Application* application;
-    application = new Application(WINDOW_WIDTH, WINDOW_HEIGHT);
+    application = new Application((int)(WORLD_SIZE.x), (int)(WORLD_SIZE.y));
 
     application->Init();
 
