@@ -22,6 +22,6 @@ public:
 	static GraphicsDevice* Get();
 	static sf::RenderWindow* GetWindow();
 
-	bool									GetIsInitialised();	
+	bool GetIsInitialised();	
 };
 

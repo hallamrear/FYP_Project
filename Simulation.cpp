@@ -104,14 +104,6 @@ void Simulation::Update(float DeltaTime)
 	// uD^2u  Viscosity
 	//Pf external
 
-	/*
-	CalculateParticleDensity();
-	CalculateParticlePressure();
-	CalculateParticleViscosity();
-	ApplyForcesToParticles();
-	*/
-
-
 	std::vector<Particle*> allLocalParticles;
 
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)

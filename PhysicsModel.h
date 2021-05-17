@@ -3,12 +3,6 @@
 
 class Particle;
 
-struct PhysicsModelDetails
-{
-	float mass;
-	float size;
-};
-
 class PhysicsModel
 {
 private:
@@ -16,16 +10,13 @@ private:
 	Vector2f previousPosition;
 
 	float initialDensity;
-	void ApplyForce(Vector2f force);
 
-	void CalculateSPH();
 	float Poly6(float radius_square);
 	float Spiky(float radius);
 	float ViscoKernel(float radius);
 
-	float CalculateParticlePressure();
-	float CalculateParticleDensity();
-	float CalculateParticleViscosity();
+	void CalculateParticleDensityAndPressure();
+	void UpdateSPH();
 
 public:
 	PhysicsModel();

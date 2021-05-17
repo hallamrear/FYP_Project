@@ -3,11 +3,6 @@
 #include "Overloads.h"
 #include "Particle.h"
 
-void PhysicsModel::ApplyForce(Vector2f force)
-{
-	netForce += force;
-}
-
 PhysicsModel::PhysicsModel()
 {
 	isResting = false;
@@ -60,7 +55,7 @@ void PhysicsModel::Update(float DeltaTime)
 		else
 			position.x = WORLD_SIZE.x - WORLD_EDGE;
 
-		velocity.x *= -0.9f;
+		velocity.x *= -DAMPENING;
 	}
 
 	if (position.y < WORLD_EDGE || position.y > WORLD_SIZE.y - WORLD_EDGE)
@@ -70,51 +65,15 @@ void PhysicsModel::Update(float DeltaTime)
 		else
 			position.y = WORLD_SIZE.y - WORLD_EDGE;
 
-		velocity.y *= -0.9f;
+		velocity.y *= -DAMPENING;
 	}
 
-	//Calculate components of drag force Stokes' drag
-	//drag works in the opposite direction to velocity
-	Vector2f drag;
-	drag.x = -1 * DEFAULT_PARTICLE_DRAG_COEFFICIENT * velocity.x;
-	drag.y = -1 * DEFAULT_PARTICLE_DRAG_COEFFICIENT * velocity.y;
+	UpdateSPH();
 
-	///Weight
-	//Add weight as a force based on the gravity(mass x g)
-	Vector2f weight = Vector2f(0.0f, 0.0f);
+	velocity += netForce / mass;
 
-	if (isResting == false)
-		weight += GRAVITY;
-		//weight += Vector2f(0.0f, 0.0f);
-	else
-		weight += Vector2f(0.0f, 0.0f);
-
-	weight.x *= density;
-	weight.y *= density;
-
-	ApplyForce(weight);
-	//ApplyForce(drag);
-	CalculateSPH();
-	ApplyForce(externalForce);
-
-
-	acceleration.x = netForce.x / mass;
-	acceleration.y = netForce.y / mass;
-
-	velocity += acceleration;
-	
-	if (velocity.GetLength() < REST_LENGTH)
-	{
-		isResting = true;
-		velocity.x = 0.0f;
-		velocity.y = 0.0f;
-	}
-	else
-	{
-		isResting = false;
-		position.x += (velocity.x * DeltaTime);
-		position.y += (velocity.y * DeltaTime);
-	}
+	position.x += ((velocity.x * DeltaTime) * DAMPENING);
+	position.y += ((velocity.y * DeltaTime) * DAMPENING);
 
 	externalForce = Vector2f(0.0f, 0.0f);
 	netForce = Vector2f(0.0f, 0.0f);
@@ -136,96 +95,62 @@ void PhysicsModel::Reset()
 	pressure = 5.0f;
 }
 
-
-float PhysicsModel::CalculateParticlePressure()
+void PhysicsModel::CalculateParticleDensityAndPressure()
 {
-	float FocussedParticleLocalPressure = GAS_CONSTANT * density;
-	//Pressure for particle i = weighted of surrounding
-	float pressureSum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-
-	//Pressure Calculation
 	int size = LocalParticles.size();
 	for (int particleCount = 0; particleCount < size; particleCount++)
 	{
+		Vector2f rij = LocalParticles[particleCount]->GetModel()->position - position;
+		float r2 = rij.GetLength() * rij.GetLength();
 
-			diff = LocalParticles.at(particleCount)->GetModel()->position - position;
-			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-
-			//Using spiky kernel as the poly6 gradient is 0 at the centre
-			float localPressure = GAS_CONSTANT * LocalParticles.at(particleCount)->GetModel()->density;
-			pressureSum += mass * ((FocussedParticleLocalPressure + localPressure) / (2 * LocalParticles.at(particleCount)->GetModel()->density) * Spiky(dist));
+		if (r2 < (KERNEL_HEIGHT * KERNEL_HEIGHT))
+		{
+			// this computation is symmetric
+			density += LocalParticles[particleCount]->GetModel()->mass * Poly6(r2);
+		}
 	}
-
-	return pressureSum;
+	pressure = GAS_CONSTANT * (density - REST_DENSITY);
 }
 
-float PhysicsModel::CalculateParticleDensity()
-{
-	float DensitySum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-
-	//Density Calculation
-	int size = LocalParticles.size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-			diff = LocalParticles.at(particleCount)->GetModel()->position - position;
-			dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-
-			DensitySum += LocalParticles.at(particleCount)->GetModel()->mass * Poly6(dist);
-	}
-
-	return DensitySum;
-}
-
-float PhysicsModel::CalculateParticleViscosity()
-{
-	float ViscositySum = 0.0f;
-	float dist = 0.0f;
-	Vector2f diff;
-	float mew = 0.0f;
-
-	//Viscosity Calculation
-	int size = LocalParticles.size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
-	{
-		diff = LocalParticles.at(particleCount)->GetModel()->position - position;
-		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
-	}
-
-	return mew * ViscositySum;
-}
-
-void PhysicsModel::CalculateSPH()
+void PhysicsModel::UpdateSPH()
 {
 	float dist = 0.0f;
 	Vector2f diff = Vector2f();
+	Vector2f diffNorm = Vector2f();
 	Vector2f pressureForce = Vector2f();
 	Vector2f viscForce = Vector2f();
+
+	CalculateParticleDensityAndPressure();
 
 	int size = LocalParticles.size();
 	for (int particleCount = 0; particleCount < size; particleCount++)
 	{
 		diff = LocalParticles.at(particleCount)->GetModel()->position - position;
-		dist = sqrt((diff.x * diff.x) + (diff.y * diff.y));
+		diffNorm = diff;
+		diffNorm.GetNormalized();
+
+		dist = diff.GetLength();
 
 		if (dist != 0.0f)
 		{
-			diff.x /= dist;
-			diff.y /= dist;
+			if (dist < KERNEL_HEIGHT)
+			{
+				pressureForce +=
+					(-1 * diffNorm) *
+					mass *
+					(pressure + LocalParticles.at(particleCount)->GetModel()->pressure) / (2.f * LocalParticles.at(particleCount)->GetModel()->density) *
+					Spiky(dist);
 
-			pressureForce += diff * mass * (pressure);
-
-			viscForce += VISCOSITY_CONSTANT * mass *
-				((LocalParticles.at(particleCount)->GetModel()->velocity - velocity) / LocalParticles.at(particleCount)->GetModel()->pressure) *
-				ViscoKernel(dist);
+				viscForce +=
+					VISCOSITY_CONSTANT *
+					mass *
+					((LocalParticles.at(particleCount)->GetModel()->velocity - velocity) / LocalParticles.at(particleCount)->GetModel()->density) *
+					ViscoKernel(dist);
+			}
 		}
 	}
 
-	ApplyForce(pressureForce);
-	ApplyForce(viscForce);
+	netForce = pressureForce + viscForce + (GRAVITY * density);
 }
 
 //Poly6 Kernel
@@ -237,7 +162,7 @@ float PhysicsModel::Poly6(float radius_square)
 		return 0.0f;
 }
 
-//Colonel Spikey Mikey
+//Colonel Mikey
 float PhysicsModel::Spiky(float radius)
 {
 	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)

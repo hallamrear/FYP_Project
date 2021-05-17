@@ -50,7 +50,7 @@ public:
 	void ClearCells();
 
 	Vector2i CalculateCellPos(Vector2f worldPos);
-	int CalculateArrayIDFromCellPos(Vector2i cell_pos);
+	int CalculateArrayIDFromCellPos(Vector2i cellPos);
 
 	void Update(float DeltaTime);
 

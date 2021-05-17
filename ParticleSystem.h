@@ -5,8 +5,6 @@ class Particle;
 class ParticleSystem
 {
 private:
-	static ParticleSystem* instance;
-
 	//Linked list of particles which are dead and can be reallocated
 	LinkedListNode* deadParticlesList;
 

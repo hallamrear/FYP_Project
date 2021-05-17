@@ -81,8 +81,8 @@ void Particle::ResolveCollision(Particle* particle)
 	newVelTwo.x = (particle->GetModel()->velocity.x * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
 	newVelTwo.y = (particle->GetModel()->velocity.y * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
 
-	GetModel()->velocity = newVelOne * 0.95f;
-	particle->GetModel()->velocity = newVelTwo * 0.95f;
+	GetModel()->velocity = newVelOne * DAMPENING;
+	particle->GetModel()->velocity = newVelTwo * DAMPENING;
 
 }
 

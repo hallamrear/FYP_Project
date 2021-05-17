@@ -56,11 +56,13 @@ void Renderer::Render_Impl(sf::Shape* shape)
 
 void Renderer::Render_Impl(sf::Vector2f position, sf::Vector2f direction, float length)
 {
+    
     sf::Vertex line[] =
     {
-        sf::Vertex(position),
-        sf::Vertex(sf::Vector2f(position.x + (direction.x * length), position.y + (direction.y * length)))
+        sf::Vertex(position, sf::Color::Magenta),
+        sf::Vertex(sf::Vector2f(position.x + (direction.x * length), position.y + (direction.y * length)), sf::Color::Magenta)
     };
+
 
     GraphicsDevice::GetWindow()->draw(line, 2, sf::Lines);
 }
@@ -75,7 +77,7 @@ void Renderer::Render_Impl(Particle* particle)
     Render_Impl(
         sf::Vector2f(particle->GetModel()->position.x, particle->GetModel()->position.y),
         line,
-        1.0f
+        particle->GetModel()->velocity.GetLength()
         );
 
     sf::CircleShape collider;
@@ -101,14 +103,14 @@ void Renderer::Render_Impl(Particle* particle)
     rect.setPosition(particle->GetModel()->position.x, particle->GetModel()->position.y);
     GraphicsDevice::GetWindow()->draw(rect);
 
-    sf::CircleShape search;
+ /*   sf::CircleShape search;
     search.setPosition(particle->GetModel()->position.x, particle->GetModel()->position.y);
     search.setRadius(PARTICLE_SEARCH_DISTANCE);
     search.setOrigin(PARTICLE_SEARCH_DISTANCE, PARTICLE_SEARCH_DISTANCE);
     search.setOutlineColor(sf::Color::Green);
     search.setOutlineThickness(1.0f);
     search.setFillColor(sf::Color::Transparent);
-    GraphicsDevice::GetWindow()->draw(search);
+    GraphicsDevice::GetWindow()->draw(search);*/
 }
 
 void Renderer::Render(sf::Shape* shape)
