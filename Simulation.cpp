@@ -53,7 +53,7 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 			//Check all their particles if theyre in the smoothing radius
 			for (int j = 0; j < cell->neighbours[i]->particles.size(); j++)
 			{
-				if (Collisions::CircleInCircle(cell->neighbours[i]->particles[j]->GetModel()->position, PARTICLE_SEARCH_DISTANCE, particle->GetModel()->position, PARTICLE_SEARCH_DISTANCE))
+				if (Collisions::CircleInCircle(cell->neighbours[i]->particles[j]->GetModel()->GetPosition(), PARTICLE_SEARCH_DISTANCE, particle->GetModel()->GetPosition(), PARTICLE_SEARCH_DISTANCE))
 				{
 					locals->push_back(cell->neighbours[i]->particles[j]);
 				}
@@ -63,7 +63,7 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 		//Check your cells particles too
 		for (int k = 0; k < cell->particles.size(); k++)
 		{
-			if (Collisions::CircleInCircle(cell->particles[k]->GetModel()->position, PARTICLE_SEARCH_DISTANCE, particle->GetModel()->position, PARTICLE_SEARCH_DISTANCE))
+			if (Collisions::CircleInCircle(cell->particles[k]->GetModel()->GetPosition(), PARTICLE_SEARCH_DISTANCE, particle->GetModel()->GetPosition(), PARTICLE_SEARCH_DISTANCE))
 			{
 				locals->push_back(cell->particles[k]);
 			}
@@ -76,8 +76,8 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 void Simulation::AddParticle(Vector2i mouseLocation)
 {
 	Particle* particle = particleSystem->GetFreshParticle();
-	particle->GetModel()->position.x = mouseLocation.x;
-	particle->GetModel()->position.y = mouseLocation.y;
+	Vector2f pos = Vector2f((float)mouseLocation.x, (float)mouseLocation.y);
+	particle->GetModel()->SetPosition(pos);
 }
 
 void Simulation::RemoveParticle(Vector2i mouseLocation)
@@ -119,8 +119,8 @@ void Simulation::Update(float DeltaTime)
 		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
 			if(Collisions::CircleInCircle(
-				particleSystem->LivingParticles[i]->GetModel()->position, particleSystem->LivingParticles[i]->GetColliderRadius(),
-				allLocalParticles[neighbours]->GetModel()->position, allLocalParticles[neighbours]->GetColliderRadius()))
+				particleSystem->LivingParticles[i]->GetModel()->GetPosition(), particleSystem->LivingParticles[i]->GetColliderRadius(),
+				allLocalParticles[neighbours]->GetModel()->GetPosition(), allLocalParticles[neighbours]->GetColliderRadius()))
 			{
 				particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
 			}

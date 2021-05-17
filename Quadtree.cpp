@@ -35,7 +35,7 @@ Quadtree::~Quadtree()
 
 void Quadtree::Insert(Particle* particle)
 {
-	if(!boundary->Contains(particle->GetModel()->position))
+	if(!boundary->Contains(particle->GetModel()->GetPosition()))
 		return;
 
 	if (data.size() != capacity)

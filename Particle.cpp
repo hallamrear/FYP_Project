@@ -26,12 +26,16 @@ void Particle::Create()
 
 void Particle::CreateRandom()
 {
-	model.position.x = (float)(rand() % (int)WORLD_SIZE.x + 1);
-	model.position.y = (float)(rand() % (int)WORLD_SIZE.y + 1);
+	Vector2f pos;
+	pos.x = (float)(rand() % (int)WORLD_SIZE.x + 1);
+	pos.y = (float)(rand() % (int)WORLD_SIZE.y + 1);
+	model.SetPosition(pos);
 
-	model.velocity.x = (float)(rand() % (int)(WORLD_SIZE.x) + 1) - (WORLD_SIZE.x / 2.0f);
-	model.velocity.y = (float)(rand() % (int)(WORLD_SIZE.y) + 1) - (WORLD_SIZE.y / 2.0f);
-	
+	Vector2f vel;
+	vel.x = (float)(rand() % (int)(WORLD_SIZE.x) + 1) - (WORLD_SIZE.x / 2.0f);
+	vel.y = (float)(rand() % (int)(WORLD_SIZE.y) + 1) - (WORLD_SIZE.y / 2.0f);
+	model.SetVelocity(vel);
+
 	isAlive = true;
 }
 
@@ -63,26 +67,28 @@ void Particle::ResolveCollision(Particle* particle)
 
 	////COLLISION RESPONSE
 	//// normalise the vector between them
-	Vector2f distance = model.position - particle->GetModel()->position;
+	Vector2f distance = model.GetPosition() - particle->GetModel()->GetPosition();
 	float sumOfRadii = colliderRadius + particle->colliderRadius;
 	float length = distance.GetLength();
 	Vector2f normalisedDistance = distance.GetNormalized();
 
-	model.position.x = particle->GetModel()->position.x + ((sumOfRadii + 1) * normalisedDistance.x);
-	model.position.y = particle->GetModel()->position.y + ((sumOfRadii + 1) * normalisedDistance.y);
+	Vector2f pos;
+	pos.x = particle->GetModel()->GetPosition().x + ((sumOfRadii + 1) * normalisedDistance.x);
+	pos.y = particle->GetModel()->GetPosition().y + ((sumOfRadii + 1) * normalisedDistance.y);
+	model.SetPosition(pos);
 
 	//PHYSICS RESPONSE
 	//2d elastic collision
 	Vector2f newVelOne;
 	Vector2f newVelTwo;
 
-	newVelOne.x = (GetModel()->velocity.x * (GetModel()->mass - particle->GetModel()->mass) + (2 * particle->GetModel()->mass * particle->GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
-	newVelOne.y = (GetModel()->velocity.y * (GetModel()->mass - particle->GetModel()->mass) + (2 * particle->GetModel()->mass * particle->GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
-	newVelTwo.x = (particle->GetModel()->velocity.x * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.x)) / (GetModel()->mass + particle->GetModel()->mass);
-	newVelTwo.y = (particle->GetModel()->velocity.y * (particle->GetModel()->mass - GetModel()->mass) + (2 * GetModel()->mass * GetModel()->velocity.y)) / (GetModel()->mass + particle->GetModel()->mass);
+	newVelOne.x = (GetModel()->GetVelocity().x * (GetModel()->GetMass() - particle->GetModel()->GetMass()) + (2 * particle->GetModel()->GetMass() * particle->GetModel()->GetVelocity().x)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
+	newVelOne.y = (GetModel()->GetVelocity().y * (GetModel()->GetMass() - particle->GetModel()->GetMass()) + (2 * particle->GetModel()->GetMass() * particle->GetModel()->GetVelocity().y)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
+	newVelTwo.x = (particle->GetModel()->GetVelocity().x * (particle->GetModel()->GetMass() - GetModel()->GetMass()) + (2 * GetModel()->GetMass() * GetModel()->GetVelocity().x)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
+	newVelTwo.y = (particle->GetModel()->GetVelocity().y * (particle->GetModel()->GetMass() - GetModel()->GetMass()) + (2 * GetModel()->GetMass() * GetModel()->GetVelocity().y)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
 
-	GetModel()->velocity = newVelOne * DAMPENING;
-	particle->GetModel()->velocity = newVelTwo * DAMPENING;
+	GetModel()->SetVelocity(newVelOne * DAMPENING);
+	particle->GetModel()->SetVelocity(newVelTwo * DAMPENING);
 
 }
 

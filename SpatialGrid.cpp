@@ -128,7 +128,7 @@ SpatialGrid::SpatialGrid(Vector2i grid_size, Vector2f cell_size)
 
 GridCell* SpatialGrid::GetCellContainingParticle(Particle* particle)
 {
-	Vector2i cellPos = CalculateCellPos(particle->GetModel()->position);
+	Vector2i cellPos = CalculateCellPos(particle->GetModel()->GetPosition());
 	int cellID = CalculateArrayIDFromCellPos(cellPos);
 
 	if (cellID != INT_MAX)
@@ -141,7 +141,7 @@ GridCell* SpatialGrid::GetCellContainingParticle(Particle* particle)
 
 void SpatialGrid::Populate(Particle* particle)
 {
-	Vector2i cellPos = CalculateCellPos(particle->GetModel()->position);
+	Vector2i cellPos = CalculateCellPos(particle->GetModel()->GetPosition());
 	int cellID = CalculateArrayIDFromCellPos(cellPos);
 
 	if (cellID != INT_MAX)

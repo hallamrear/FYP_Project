@@ -69,20 +69,20 @@ void Renderer::Render_Impl(sf::Vector2f position, sf::Vector2f direction, float 
 
 void Renderer::Render_Impl(Particle* particle)
 {
-    Vector2f dir = Vector2f(particle->GetModel()->velocity);
+    Vector2f dir = Vector2f(particle->GetModel()->GetVelocity());
     dir.GetNormalized();
 
     sf::Vector2f line = sf::Vector2f(dir.x, dir.y);
 
     Render_Impl(
-        sf::Vector2f(particle->GetModel()->position.x, particle->GetModel()->position.y),
+        sf::Vector2f(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y),
         line,
-        particle->GetModel()->velocity.GetLength()
+        particle->GetModel()->GetVelocity().GetLength()
         );
 
     sf::CircleShape collider;
     float r = particle->GetColliderRadius();
-    collider.setPosition(particle->GetModel()->position.x, particle->GetModel()->position.y);
+    collider.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
     collider.setRadius(r);
     collider.setOrigin(r, r);
     collider.setOutlineThickness(2.0f);
@@ -100,7 +100,7 @@ void Renderer::Render_Impl(Particle* particle)
     rect.setOrigin(sf::Vector2f(1.0f, 1.0f));
     rect.setFillColor(sf::Color::Red);
     rect.setOutlineColor(sf::Color::Red);
-    rect.setPosition(particle->GetModel()->position.x, particle->GetModel()->position.y);
+    rect.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
     GraphicsDevice::GetWindow()->draw(rect);
 
  /*   sf::CircleShape search;

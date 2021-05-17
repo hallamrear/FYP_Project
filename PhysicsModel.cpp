@@ -35,6 +35,36 @@ PhysicsModel::PhysicsModel(Vector2f position, Vector2f velocity = Vector2f(0.0f,
 	pressure = 5.0f;
 }
 
+Vector2f PhysicsModel::GetPosition()
+{
+	return position;
+}
+
+void PhysicsModel::SetPosition(Vector2f position)
+{
+	this->position = position;
+}
+
+Vector2f PhysicsModel::GetVelocity()
+{
+	return velocity;
+}
+
+void PhysicsModel::SetVelocity(Vector2f velocity)
+{
+	this->velocity = velocity;
+}
+
+float PhysicsModel::GetMass()
+{
+	return mass;
+}
+
+void PhysicsModel::SetMass(float mass)
+{
+	this->mass = mass;
+}
+
 bool PhysicsModel::IsResting()
 {
 	return isResting;
