@@ -73,11 +73,12 @@ void Simulation::GetLocalParticlesFromGrid(std::vector<Particle*>* locals, Parti
 	}
 }
 
-void Simulation::AddParticle(Vector2i mouseLocation)
+Particle* Simulation::AddParticle(Vector2i mouseLocation)
 {
 	Particle* particle = particleSystem->GetFreshParticle();
 	Vector2f pos = Vector2f((float)mouseLocation.x, (float)mouseLocation.y);
 	particle->GetModel()->SetPosition(pos);
+	return particle;
 }
 
 void Simulation::RemoveParticle(Vector2i mouseLocation)
@@ -99,22 +100,17 @@ void Simulation::Update(float DeltaTime)
 		grid->Populate(particleSystem->LivingParticles[i]);
 	}
 
-	//P * du/dt = -Dp + uD^2u + Pf
-	//-Dp Pressure
-	// uD^2u  Viscosity
-	//Pf external
-
 	std::vector<Particle*> allLocalParticles;
 
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)
 	{
-		particleSystem->LivingParticles[i]->Update(DeltaTime);
-
 		allLocalParticles.clear();
 
 		GetLocalParticlesFromGrid(&allLocalParticles, particleSystem->LivingParticles[i]);
 
 		particleSystem->LivingParticles[i]->GetModel()->LocalParticles = allLocalParticles;
+
+		particleSystem->LivingParticles[i]->Update(DeltaTime);
 
 		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
@@ -139,5 +135,4 @@ void Simulation::Render()
 	{		
 		grid->RenderMarchingSquares();
 	}
-
 }

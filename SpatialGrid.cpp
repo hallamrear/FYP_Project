@@ -376,10 +376,10 @@ int SpatialGrid::CalculateWeights(int i, int j)
 
 	float TL = 0.0f, TR = 0.0f, BL = 0.0f, BR = 0.0f;
 
-	//TL = cell->neighbours[0]->GetPointW + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
-	//TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;
-	//BL = cell->neighbours[3]->PointWeight + cell->neighbours[6]->PointWeight + cell->neighbours[7]->PointWeight / 3;
-	//BR = cell->neighbours[5]->PointWeight + cell->neighbours[7]->PointWeight + cell->neighbours[8]->PointWeight / 3;
+	/*TL = cell->neighbours[0]->PointWeight + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
+	TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;
+	BL = cell->neighbours[3]->PointWeight + cell->neighbours[6]->PointWeight + cell->neighbours[7]->PointWeight / 3;
+	BR = cell->neighbours[5]->PointWeight + cell->neighbours[7]->PointWeight + cell->neighbours[8]->PointWeight / 3;*/
 
 	if (TL > threshold)
 		a = 1;

@@ -7,12 +7,12 @@ PhysicsModel::PhysicsModel()
 {
 	isResting = false;
 
-	position = Vector2f(123456789.0F, 123456789.0F);
+	position = Vector2f(FLT_MAX, FLT_MAX);
 	acceleration = Vector2f(0.0f, 0.0f);
 	velocity = Vector2f(0.0f, 0.0f);
 	externalForce = Vector2f(0.0f, 0.0f);
 
-	initialDensity = density = 10.0f;
+	initialDensity = density = DEFAULT_PARTICLE_MASS;
 	viscosity = 10.0f;
 	mass = DEFAULT_PARTICLE_MASS;
 
@@ -29,7 +29,7 @@ PhysicsModel::PhysicsModel(Vector2f position, Vector2f velocity = Vector2f(0.0f,
 	acceleration = Vector2f(0.0f, 0.0f);
 	externalForce = Vector2f(0.0f, 0.0f);
 
-	density = 10.0f;
+	density = DEFAULT_PARTICLE_MASS;
 	viscosity = 10.0f;
 	mass = DEFAULT_PARTICLE_MASS;
 	pressure = 5.0f;
@@ -113,13 +113,12 @@ void PhysicsModel::Update(float DeltaTime)
 
 void PhysicsModel::Reset()
 {
-	//TODO : Set all variables to 0
-	position = Vector2f(123456789.0F, 123456789.0F);
+	position = Vector2f(FLT_MAX, FLT_MAX);
 	acceleration = Vector2f(0.0f, 0.0f);
 	velocity = Vector2f(0.0f, 0.0f);
 	externalForce = Vector2f(0.0f, 0.0f);
 
-	initialDensity = density = 10.0f;
+	initialDensity = density = DEFAULT_PARTICLE_MASS;
 	viscosity = 10.0f;
 	mass = DEFAULT_PARTICLE_MASS;
 	pressure = 5.0f;
@@ -127,18 +126,20 @@ void PhysicsModel::Reset()
 
 void PhysicsModel::CalculateParticleDensityAndPressure()
 {
+	//Calculate density and pressure from number of particles surrounding it
+
 	int size = LocalParticles.size();
 	for (int particleCount = 0; particleCount < size; particleCount++)
 	{
-		Vector2f rij = LocalParticles[particleCount]->GetModel()->position - position;
-		float r2 = rij.GetLength() * rij.GetLength();
+		Vector2f dist = LocalParticles[particleCount]->GetModel()->position - position;
+		float distSquared = dist.GetLength() * dist.GetLength();
 
-		if (r2 < (KERNEL_HEIGHT * KERNEL_HEIGHT))
+		if (distSquared < (KERNEL_HEIGHT * KERNEL_HEIGHT))
 		{
-			// this computation is symmetric
-			density += LocalParticles[particleCount]->GetModel()->mass * Poly6(r2);
+			density += LocalParticles[particleCount]->GetModel()->mass * Poly6(distSquared);
 		}
 	}
+
 	pressure = GAS_CONSTANT * (density - REST_DENSITY);
 }
 
@@ -147,8 +148,13 @@ void PhysicsModel::UpdateSPH()
 	float dist = 0.0f;
 	Vector2f diff = Vector2f();
 	Vector2f diffNorm = Vector2f();
-	Vector2f pressureForce = Vector2f();
-	Vector2f viscForce = Vector2f();
+	Vector2f sumPressure = Vector2f();
+	Vector2f sumVisco = Vector2f();
+
+	//P * du/dt = -Dp + uD^2u + Pf
+	//-Dp Pressure
+	// uD^2u  Viscosity
+	//Pf external
 
 	CalculateParticleDensityAndPressure();
 
@@ -158,20 +164,19 @@ void PhysicsModel::UpdateSPH()
 		diff = LocalParticles.at(particleCount)->GetModel()->position - position;
 		diffNorm = diff;
 		diffNorm.GetNormalized();
-
 		dist = diff.GetLength();
 
 		if (dist != 0.0f)
 		{
 			if (dist < KERNEL_HEIGHT)
 			{
-				pressureForce +=
+				sumPressure +=
 					(-1 * diffNorm) *
 					mass *
-					(pressure + LocalParticles.at(particleCount)->GetModel()->pressure) / (2.f * LocalParticles.at(particleCount)->GetModel()->density) *
+					(pressure + LocalParticles.at(particleCount)->GetModel()->pressure) / (2.0f * LocalParticles.at(particleCount)->GetModel()->density) *
 					Spiky(dist);
 
-				viscForce +=
+				sumVisco +=
 					VISCOSITY_CONSTANT *
 					mass *
 					((LocalParticles.at(particleCount)->GetModel()->velocity - velocity) / LocalParticles.at(particleCount)->GetModel()->density) *
@@ -180,7 +185,7 @@ void PhysicsModel::UpdateSPH()
 		}
 	}
 
-	netForce = pressureForce + viscForce + (GRAVITY * density);
+	netForce = (-1 * sumPressure) + sumVisco + /*EXTERNAL*/ (GRAVITY * mass * density);
 }
 
 //Poly6 Kernel
@@ -196,7 +201,7 @@ float PhysicsModel::Poly6(float radius_square)
 float PhysicsModel::Spiky(float radius)
 {
 	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
-		return 15.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
+		return -15.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
 	else
 		return 0.0f;
 }
@@ -205,7 +210,7 @@ float PhysicsModel::Spiky(float radius)
 float PhysicsModel::ViscoKernel(float radius)
 {
 	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
-		return 15.0f / (2 * M_PI * pow(KERNEL_HEIGHT, 3)) * (0.0f - ((radius * radius * radius) / (2 * (KERNEL_HEIGHT * KERNEL_HEIGHT * KERNEL_HEIGHT))) + ((radius * radius) / (KERNEL_HEIGHT * KERNEL_HEIGHT)) + (KERNEL_HEIGHT / (2 * radius)) - 1);
+		return -15.0f / (2 * M_PI * pow(KERNEL_HEIGHT, 3)) * (0.0f - ((radius * radius * radius) / (2 * (KERNEL_HEIGHT * KERNEL_HEIGHT * KERNEL_HEIGHT))) + ((radius * radius) / (KERNEL_HEIGHT * KERNEL_HEIGHT)) + (KERNEL_HEIGHT / (2 * radius)) - 1);
 	else
 		return 0.0f;
 }

@@ -75,6 +75,12 @@ void Application::HandleKeyboardInput(float DeltaTime)
 	{
 		simulation->ToggleIsRunning();
 	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && addedThisFrame == false)
+	{
+		simulation->AddParticle(mouseWindowPos);
+		addedThisFrame = true;
+	}
 }
 
 void Application::HandleMouseInput(float DeltaTime)
@@ -95,6 +101,9 @@ void Application::HandleMouseInput(float DeltaTime)
 
 void Application::Update(float DeltaTime)
 {
+	if (addedThisFrame == true)
+		addedThisFrame = false;
+
 	sf::Event event;
 	while (GraphicsDevice::GetWindow()->pollEvent(event))
 	{

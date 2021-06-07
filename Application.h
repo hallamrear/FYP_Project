@@ -18,6 +18,8 @@ class Application
 
 	Simulation* simulation;
 
+	bool addedThisFrame;
+
 public:
 	Application(float width, float height);
 	~Application();

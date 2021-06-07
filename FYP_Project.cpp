@@ -47,8 +47,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             if (deltaTime > 0.0f)
             {
-                application->Update(deltaTime);
                 application->Render();
+                application->Update(deltaTime);
             }
 
             previousTime = currentTime;

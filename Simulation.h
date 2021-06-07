@@ -35,7 +35,7 @@ public:
 
 	void ToggleIsRunning();
 
-	void AddParticle(Vector2i mouseLocation);
+	Particle* AddParticle(Vector2i mouseLocation);
 	void RemoveParticle(Vector2i mouseLocation);
 	void Update(float DeltaTime);
 	void Render();
