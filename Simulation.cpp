@@ -4,6 +4,7 @@
 #include "Collisions.h"
 #include "Overloads.h"
 #include "PhysicsModel.h"
+#include "Renderer.h"
 
 Simulation::Simulation(
 	int particle_count,
@@ -20,10 +21,7 @@ Simulation::Simulation(
 
 	particleSystem = new ParticleSystem(particle_count);
 
-	for (int i = 0; i < STARTING_PARTICLE_COUNT; i++)
-	{
-		grid->Populate(particleSystem->GetFreshParticle());
-	}
+	ResetSimulation();
 
 	isRunning = true;
 }
@@ -31,6 +29,28 @@ Simulation::Simulation(
 Simulation::~Simulation()
 {
 
+}
+
+void Simulation::ResetSimulation()
+{
+	for (int i = 0; i < particleSystem->livingParticleCount; i++)
+	{
+		particleSystem->KillParticle(particleSystem->LivingParticles[i]);
+	}
+
+	for (float y = WORLD_EDGE; y < WORLD_SIZE.y - WORLD_EDGE * 2.f; y += KERNEL_HEIGHT)
+	{
+		for (float x = WORLD_SIZE.x / 4; x <= WORLD_SIZE.x / 2; x += KERNEL_HEIGHT)
+		{
+			if (particleSystem->livingParticleCount < STARTING_PARTICLE_COUNT)
+			{
+				float jitter = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+				Particle* p = particleSystem->GetFreshParticle();
+				p->GetModel()->SetPosition(Vector2f(x + jitter, y));
+				grid->Populate(p);
+			}
+		}
+	}
 }
 
 void Simulation::ToggleIsRunning()
@@ -89,9 +109,6 @@ void Simulation::RemoveParticle(Vector2i mouseLocation)
 
 void Simulation::Update(float DeltaTime)
 {
-	if (isRunning == false)
-		return;
-
 	grid->ClearCells();
 
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)
@@ -110,7 +127,9 @@ void Simulation::Update(float DeltaTime)
 
 		particleSystem->LivingParticles[i]->GetModel()->LocalParticles = allLocalParticles;
 
-		particleSystem->LivingParticles[i]->Update(DeltaTime);
+
+		if (isRunning)
+			particleSystem->LivingParticles[i]->Update(DeltaTime);
 
 		for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)
 		{
@@ -121,9 +140,7 @@ void Simulation::Update(float DeltaTime)
 				particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
 			}
 		}
-
 	}
-
 }
 
 void Simulation::Render()
@@ -134,5 +151,16 @@ void Simulation::Render()
 	if (particleSystem->livingParticleCount > 0)
 	{		
 		grid->RenderMarchingSquares();
+	}
+
+	if (isRunning == false)
+	{
+		sf::RectangleShape rect;
+		rect.setSize(sf::Vector2f(50.0f, 50.0f));
+		rect.setOrigin(sf::Vector2f(25.0f, 25.0f));
+		rect.setFillColor(sf::Color::Red);
+		rect.setOutlineColor(sf::Color::Green);
+		rect.setPosition(WORLD_SIZE.x / 2, WORLD_SIZE.y / 2);
+		GraphicsDevice::GetWindow()->draw(rect);
 	}
 }

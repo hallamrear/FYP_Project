@@ -27,7 +27,14 @@ public:
 
 		neighbours.clear();
 		particles.clear();
+	}
 
+	void UpdatePointWeight()
+	{
+		if (particles.size() != 0)
+			PointWeight = 1.0f;
+		else
+			PointWeight = 0.0f;
 	}
 };
 

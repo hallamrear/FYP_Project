@@ -71,15 +71,14 @@ void Application::UpdateMouseInputDetails(int posX, int posY)
 
 void Application::HandleKeyboardInput(float DeltaTime)
 {
-	if (GetAsyncKeyState(VK_SPACE))
+	if (GetKeyState(VK_SPACE))
 	{
 		simulation->ToggleIsRunning();
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && addedThisFrame == false)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
 	{
-		simulation->AddParticle(mouseWindowPos);
-		addedThisFrame = true;
+		simulation->ResetSimulation();
 	}
 }
 
@@ -103,7 +102,7 @@ void Application::Update(float DeltaTime)
 {
 	if (addedThisFrame == true)
 		addedThisFrame = false;
-
+	
 	sf::Event event;
 	while (GraphicsDevice::GetWindow()->pollEvent(event))
 	{

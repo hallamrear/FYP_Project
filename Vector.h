@@ -5,6 +5,13 @@ public:
 	float x = 0.0f;
 	float y = 0.0f;
 
+	Vector2f operator-() const {
+		Vector2f v;
+		v.x = -x;
+		v.y = -y;
+		return v;
+	}
+
 	Vector2f()
 	{
 
@@ -35,8 +42,28 @@ public:
 		return result;
 	}
 
-	//Normalizes this vector and returns it.
+	//returns normalized version of  this vector
 	Vector2f GetNormalized()
+	{
+		float length = GetLength();
+
+		Vector2f normalized;
+
+		if (length != 0.0f)
+		{
+			normalized.x = x / length;
+			normalized.y = y / length;
+		}
+		else
+		{
+			normalized.x = 0.0f;
+			normalized.y = 0.0f;
+		}
+
+		return normalized;
+	}
+
+	Vector2f Normalize()
 	{
 		float length = GetLength();
 
@@ -44,11 +71,6 @@ public:
 		{
 			x = x / length;
 			y = y / length;
-		}
-		else
-		{
-			x = 0.0f;
-			y = 0.0f;
 		}
 
 		return *this;

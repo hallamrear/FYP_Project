@@ -1,5 +1,6 @@
 #pragma once
 #include "Device.h"
+#include "Vector.h"
 
 #define VS_SHADER "VertexShader.hlsl"
 #define PS_SHADER "PixelShader.hlsl"
@@ -22,6 +23,7 @@ private:
 	void Render_Impl(Particle* particle);
 	void Render_Impl(sf::Shape* shape);
 	void Render_Impl(sf::Vector2f position, sf::Vector2f direction, float length);
+	void RenderLine_Impl(Vector2f start, Vector2f end, float thickness, sf::Color color);
 
 public:
 	Renderer(const Renderer&) = delete;
@@ -34,7 +36,7 @@ public:
 	void PrepareFrame();
 	void PresentFrame();
 
-
+	static void RenderLine(Vector2f start, Vector2f end, float thickness, sf::Color color);
 	static void Render(sf::Vector2f position, sf::Vector2f direction, float length);
 	static void Render(Particle* particle);
 	static void Render(sf::Shape* particle);

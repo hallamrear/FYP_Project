@@ -8,7 +8,6 @@ class PhysicsModel
 private:
 	bool isResting;
 	Vector2f previousPosition;
-	Vector2f netForce;
 	Vector2f position;
 	Vector2f acceleration;
 	Vector2f velocity;
@@ -26,8 +25,12 @@ private:
 
 	void CalculateParticleDensityAndPressure();
 	void UpdateSPH();
+	void EnforceEdges();
 
 public:
+
+	Vector2f netForce;
+
 	PhysicsModel();
 	PhysicsModel(Vector2f position, Vector2f velocity);
 	std::vector<Particle*> LocalParticles;

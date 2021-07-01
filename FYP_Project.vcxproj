@@ -186,6 +186,7 @@
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Quadtree.h" />
+    <ClInclude Include="SimConsts.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="SpatialGrid.h" />
     <ClInclude Include="PhysicsModel.h" />

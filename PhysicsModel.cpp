@@ -2,6 +2,9 @@
 #include "PhysicsModel.h"
 #include "Overloads.h"
 #include "Particle.h"
+#include "SimConsts.h"
+
+#include <iostream>
 
 PhysicsModel::PhysicsModel()
 {
@@ -13,10 +16,9 @@ PhysicsModel::PhysicsModel()
 	externalForce = Vector2f(0.0f, 0.0f);
 
 	initialDensity = density = DEFAULT_PARTICLE_MASS;
-	viscosity = 10.0f;
 	mass = DEFAULT_PARTICLE_MASS;
-
-	pressure = 5.0f;
+	viscosity = 0.0f;
+	pressure = 0.0f;
 
 	Reset();
 }
@@ -29,10 +31,10 @@ PhysicsModel::PhysicsModel(Vector2f position, Vector2f velocity = Vector2f(0.0f,
 	acceleration = Vector2f(0.0f, 0.0f);
 	externalForce = Vector2f(0.0f, 0.0f);
 
-	density = DEFAULT_PARTICLE_MASS;
-	viscosity = 10.0f;
+	initialDensity = density = DEFAULT_PARTICLE_MASS;
 	mass = DEFAULT_PARTICLE_MASS;
-	pressure = 5.0f;
+	viscosity = 0.0f;
+	pressure = 0.0f;
 }
 
 Vector2f PhysicsModel::GetPosition()
@@ -78,37 +80,45 @@ void PhysicsModel::ApplyExternalForce(Vector2f force)
 
 void PhysicsModel::Update(float DeltaTime)
 {
-	if (position.x < WORLD_EDGE || position.x > WORLD_SIZE.x - WORLD_EDGE)
-	{
-		if (position.x < WORLD_EDGE)
-			position.x = WORLD_EDGE;
-		else
-			position.x = WORLD_SIZE.x - WORLD_EDGE;
+	netForce = Vector2f();
 
-		velocity.x *= -DAMPENING;
-	}
-
-	if (position.y < WORLD_EDGE || position.y > WORLD_SIZE.y - WORLD_EDGE)
-	{
-		if (position.y < WORLD_EDGE)
-			position.y = WORLD_EDGE;
-		else
-			position.y = WORLD_SIZE.y - WORLD_EDGE;
-
-		velocity.y *= -DAMPENING;
-	}
-
+	CalculateParticleDensityAndPressure();
 	UpdateSPH();
 
-	velocity += netForce / mass;
-
-	position.x += ((velocity.x * DeltaTime) * DAMPENING);
-	position.y += ((velocity.y * DeltaTime) * DAMPENING);
-
-	externalForce = Vector2f(0.0f, 0.0f);
-	netForce = Vector2f(0.0f, 0.0f);
-
 	previousPosition = position;
+
+	acceleration = (netForce / density);
+	velocity = velocity + (DeltaTime * acceleration = (netForce / density));
+	position = position + (velocity * DeltaTime);
+
+	EnforceEdges();
+}
+
+void PhysicsModel::EnforceEdges()
+{
+	// enforce boundary conditions
+	if (position.x - WORLD_EDGE < 0.0f)
+	{
+		velocity.x *= DAMPENING;
+		position.x = WORLD_EDGE;
+	}
+
+	if (position.x + WORLD_EDGE > WORLD_SIZE.x)
+	{
+		velocity.x *= DAMPENING;
+		position.x = WORLD_SIZE.x - WORLD_EDGE;
+	}
+
+	if (position.y - WORLD_EDGE < 0.0f)
+	{
+		velocity.y *= DAMPENING;
+		position.y = WORLD_EDGE;
+	}
+	if (position.y + WORLD_EDGE > WORLD_SIZE.y)
+	{
+		velocity.y *= DAMPENING;
+		position.y = WORLD_SIZE.y - WORLD_EDGE;
+	}
 }
 
 void PhysicsModel::Reset()
@@ -126,69 +136,65 @@ void PhysicsModel::Reset()
 
 void PhysicsModel::CalculateParticleDensityAndPressure()
 {
-	//Calculate density and pressure from number of particles surrounding it
+	//could make equal to 0;
+	density = initialDensity;
+	density += mass * Poly6(0.0f);
 
-	int size = LocalParticles.size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
+	for (auto p : LocalParticles)
 	{
-		Vector2f dist = LocalParticles[particleCount]->GetModel()->position - position;
-		float distSquared = dist.GetLength() * dist.GetLength();
+		Vector2f diff = position - p->GetModel()->GetPosition();
+		float dist = diff.GetLength();
 
-		if (distSquared < (KERNEL_HEIGHT * KERNEL_HEIGHT))
-		{
-			density += LocalParticles[particleCount]->GetModel()->mass * Poly6(distSquared);
-		}
+		density += (p->GetModel()->GetMass() * Poly6(dist * dist));
+
 	}
-
+	//could remove max;
+	//pressure = std::max(GAS_CONSTANT * (density - REST_DENSITY), 0.0f);
 	pressure = GAS_CONSTANT * (density - REST_DENSITY);
+
+	/*std::string s = "Pressure: " + std::to_string(pressure) + '\n';
+	s += "Density : " + std::to_string(density) + '\n';
+	OutputDebugStringA(s.c_str());*/
 }
 
 void PhysicsModel::UpdateSPH()
 {
-	float dist = 0.0f;
-	Vector2f diff = Vector2f();
-	Vector2f diffNorm = Vector2f();
-	Vector2f sumPressure = Vector2f();
-	Vector2f sumVisco = Vector2f();
+	Vector2f fPressure;
+	Vector2f sumPressure;
+	Vector2f sumViscosity;
+	Vector2f fViscosity;
+	Vector2f fSurfaceTension;
 
-	//P * du/dt = -Dp + uD^2u + Pf
-	//-Dp Pressure
-	// uD^2u  Viscosity
-	//Pf external
-
-	CalculateParticleDensityAndPressure();
-
-	int size = LocalParticles.size();
-	for (int particleCount = 0; particleCount < size; particleCount++)
+	for (auto p : LocalParticles)
 	{
-		diff = LocalParticles.at(particleCount)->GetModel()->position - position;
-		diffNorm = diff;
-		diffNorm.GetNormalized();
-		dist = diff.GetLength();
+		Vector2f diff = position - p->GetModel()->GetPosition();
+		float dist = diff.GetLength();
 
 		if (dist != 0.0f)
 		{
-			if (dist < KERNEL_HEIGHT)
-			{
-				sumPressure +=
-					(-1 * diffNorm) *
-					mass *
-					(pressure + LocalParticles.at(particleCount)->GetModel()->pressure) / (2.0f * LocalParticles.at(particleCount)->GetModel()->density) *
-					Spiky(dist);
+			sumPressure += diff.GetNormalized() * (p->GetModel()->mass / p->GetModel()->density) *
+				((pressure + p->GetModel()->pressure) / 2)
+				* Spiky(dist);
 
-				sumVisco +=
-					VISCOSITY_CONSTANT *
-					mass *
-					((LocalParticles.at(particleCount)->GetModel()->velocity - velocity) / LocalParticles.at(particleCount)->GetModel()->density) *
-					ViscoKernel(dist);
-			}
+			sumViscosity += diff.GetNormalized() * (p->GetModel()->mass / p->GetModel()->density) *
+				(p->GetModel()->GetVelocity() - velocity) * ViscoKernel(dist);
 		}
 	}
 
-	netForce = (-1 * sumPressure) + sumVisco + /*EXTERNAL*/ (GRAVITY * mass * density);
+	if (LocalParticles.size() != 0)
+	{
+		fPressure = sumPressure;
+		fViscosity = VISCOSITY_CONSTANT * sumViscosity;
+
+		netForce += fPressure;
+		netForce += fViscosity;
+		netForce += fSurfaceTension;
+	}
+
+	netForce += density * GRAVITY;
 }
 
-//Poly6 Kernel
+//Poly6 Kernel for Density calculations
 float PhysicsModel::Poly6(float radius_square)
 {
 	if (radius_square >= 0.0f && radius_square <= KERNEL_HEIGHT)
@@ -197,16 +203,16 @@ float PhysicsModel::Poly6(float radius_square)
 		return 0.0f;
 }
 
-//Colonel Mikey
+//Spiky kernel for Pressure calculations
 float PhysicsModel::Spiky(float radius)
 {
 	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
-		return -15.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
+		return -45.0f / (M_PI * pow(KERNEL_HEIGHT, 6)) * pow(KERNEL_HEIGHT - radius, 3);
 	else
 		return 0.0f;
 }
 
-//sksksksksk
+//Kernel for viscosity calculations
 float PhysicsModel::ViscoKernel(float radius)
 {
 	if (radius >= 0.0f && radius <= KERNEL_HEIGHT)
@@ -214,4 +220,3 @@ float PhysicsModel::ViscoKernel(float radius)
 	else
 		return 0.0f;
 }
-

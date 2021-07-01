@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "Renderer.h"
 #include "Particle.h"
+#include "Overloads.h"
 
 Renderer* Renderer::instance;
 
@@ -13,7 +14,6 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-
 }
 
 HRESULT Renderer::Init(int width, int height)
@@ -62,8 +62,29 @@ void Renderer::Render_Impl(sf::Vector2f position, sf::Vector2f direction, float 
         sf::Vertex(sf::Vector2f(position.x + (direction.x * length), position.y + (direction.y * length)), sf::Color::Magenta)
     };
 
-
     GraphicsDevice::GetWindow()->draw(line, 2, sf::Lines);
+}
+
+void Renderer::RenderLine_Impl(Vector2f start, Vector2f end, float thickness, sf::Color color)
+{
+    sf::Vector2f dv = sf::Vector2f(end.x - start.x, end.y - start.y);
+    float dl = (float)sqrtf(dv.x * dv.x + dv.y * dv.y);
+    sf::Vector2f uv = sf::Vector2f(dv.x / dl, dv.y / dl);
+    sf::Vector2f up = sf::Vector2f(-uv.y, uv.x);
+    sf::Vector2f offset = up * (thickness / 2.0f);
+
+    sf::Vector2f st = sf::Vector2f(start.x, start.y);
+    sf::Vector2f endd = sf::Vector2f(end.x, end.y);
+
+    sf::Vertex* points = new sf::Vertex[4]
+    {
+        sf::Vertex(st + offset, color),
+        sf::Vertex(endd + offset, color),
+        sf::Vertex(endd - offset, color),
+        sf::Vertex(st - offset, color),
+    };
+
+    GraphicsDevice::GetWindow()->draw(points, 4, sf::Quads);
 }
 
 void Renderer::Render_Impl(Particle* particle)
@@ -78,13 +99,28 @@ void Renderer::Render_Impl(Particle* particle)
     collider.setOrigin(r, r);
     collider.setOutlineThickness(2.0f);
 
-    if(particle->GetModel()->IsResting())
+    if (particle->GetModel()->IsResting())
         collider.setOutlineColor(sf::Color::Yellow);
     else
         collider.setOutlineColor(sf::Color::Red);
 
     collider.setFillColor(sf::Color::Transparent);
+    collider.setFillColor(sf::Color::Red);
     GraphicsDevice::GetWindow()->draw(collider);
+
+
+    //sf::CircleShape search;
+    //r = PARTICLE_SEARCH_DISTANCE;
+    //search.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
+    //search.setRadius(r);
+    //search.setOrigin(r, r);
+    //search.setOutlineThickness(2.0f);
+    //search.setOutlineColor(sf::Color::White);
+    //search.setFillColor(sf::Color::Transparent);
+    //GraphicsDevice::GetWindow()->draw(search);
+
+    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + particle->GetModel()->GetVelocity(), 2.0f, sf::Color::Yellow);
+    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + particle->GetModel()->netForce, 5.0f, sf::Color::Green);
 
     sf::RectangleShape rect;
     rect.setSize(sf::Vector2f(2.0f, 2.0f));
@@ -103,6 +139,11 @@ void Renderer::Render(sf::Shape* shape)
 void Renderer::Render(Particle* particle)
 {
     Get()->Render_Impl(particle);
+}
+
+void Renderer::RenderLine(Vector2f start, Vector2f end, float thickness, sf::Color color)
+{
+    Get()->RenderLine_Impl(start, end, thickness, color);
 }
 
 void Renderer::Render(sf::Vector2f position, sf::Vector2f direction, float length)

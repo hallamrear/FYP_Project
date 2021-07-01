@@ -1,5 +1,6 @@
 #pragma once
 #include "PhysicsModel.h"
+#include "SimConsts.h"
 
 class Particle
 {

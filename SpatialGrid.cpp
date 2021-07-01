@@ -147,6 +147,7 @@ void SpatialGrid::Populate(Particle* particle)
 	if (cellID != INT_MAX)
 	{
 		cells[cellID].particles.push_back(particle);
+		cells[cellID].UpdatePointWeight();
 	}	
 }
 
@@ -215,11 +216,11 @@ void SpatialGrid::RenderGrid()
 
 			for (int n = 0; n < cells[(x * gridSize.y) + y].neighbours.size(); n++)
 			{
-				if (cells[(x * gridSize.y) + y].neighbours[n]->particles.size() != 0)
+				if (cells[(x * gridSize.y) + y].neighbours[n]->particles.size() > 0)
 					shape.setFillColor(sf::Color::Cyan);
 			}
 
-			if (cells[(x * gridSize.y) + y].particles.size() != 0)
+			if (cells[(x * gridSize.y) + y].particles.size() > 0)
 				shape.setFillColor(sf::Color::Blue);
 
 			shape.setPosition(position);
@@ -374,12 +375,65 @@ int SpatialGrid::CalculateWeights(int i, int j)
 	int c = 0;
 	int d = 0;
 
+	GridCell* surrounding[9];
+
+	surrounding[0] = &cells[((j - 1) * gridSize.x) + (i + 1)];
+	surrounding[1] = &cells[((j - 1) * gridSize.x) + (i)];
+	surrounding[2] = &cells[((j - 1) * gridSize.x) + (i - 1)];
+	surrounding[3] = &cells[((j    ) * gridSize.x) + (i + 1)];
+	surrounding[4] = nullptr;
+	surrounding[5] = &cells[((j    ) * gridSize.x) + (i - 1)];
+	surrounding[6] = &cells[((j + 1) * gridSize.x) + (i + 1)];
+	surrounding[7] = &cells[((j + 1) * gridSize.x) + (i)];
+	surrounding[8] = &cells[((j + 1) * gridSize.x) + (i - 1)];
+
 	float TL = 0.0f, TR = 0.0f, BL = 0.0f, BR = 0.0f;
 
-	/*TL = cell->neighbours[0]->PointWeight + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
-	TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;
-	BL = cell->neighbours[3]->PointWeight + cell->neighbours[6]->PointWeight + cell->neighbours[7]->PointWeight / 3;
-	BR = cell->neighbours[5]->PointWeight + cell->neighbours[7]->PointWeight + cell->neighbours[8]->PointWeight / 3;*/
+	if (cell->neighbours.size() != 0)
+	{
+		if (surrounding[0])
+			TL += surrounding[0]->PointWeight;
+		if (surrounding[1])
+			TL += surrounding[1]->PointWeight;
+		if (surrounding[3])
+			TL += surrounding[3]->PointWeight;
+		if (TL != 0.0f)
+			TL /= 3;
+
+		if (surrounding[1])
+			TR += surrounding[1]->PointWeight;
+		if (surrounding[2])
+			TR += surrounding[2]->PointWeight;
+		if (surrounding[5])
+			TR += surrounding[5]->PointWeight;
+		if (TR != 0.0f)
+			TR /= 3;
+
+		if (surrounding[3])
+			BL += surrounding[3]->PointWeight;
+		if (surrounding[6])
+			BL += surrounding[6]->PointWeight;
+		if (surrounding[7])
+			BL += surrounding[7]->PointWeight;
+		if (BL != 0.0f)
+			BL /= 3;
+
+		if (surrounding[5])
+			BR += surrounding[5]->PointWeight;
+		if (surrounding[7])
+			BR += surrounding[7]->PointWeight;
+		if (surrounding[8])
+			BR += surrounding[8]->PointWeight;
+		if (BR != 0.0f)
+			BR /= 3;
+
+		/*
+		TL = cell->neighbours[0]->PointWeight + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
+		TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;
+		BL = cell->neighbours[3]->PointWeight + cell->neighbours[6]->PointWeight + cell->neighbours[7]->PointWeight / 3;
+		BR = cell->neighbours[5]->PointWeight + cell->neighbours[7]->PointWeight + cell->neighbours[8]->PointWeight / 3;
+		*/
+	}
 
 	if (TL > threshold)
 		a = 1;

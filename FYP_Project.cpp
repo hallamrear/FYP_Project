@@ -5,6 +5,7 @@
 #include "framework.h"
 #include "Application.h"
 #include "FYP_Project.h"
+#include "SimConsts.h"
 #include <windowsx.h>
 
 
@@ -39,7 +40,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Main message loop:
         while (application->IsRunning())
         {
-         
             currentTime = (float)GetTickCount();
 
             deltaTime = currentTime - previousTime;
