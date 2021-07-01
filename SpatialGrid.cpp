@@ -33,11 +33,17 @@ void SpatialGrid::PopulateCellsWithNeighbours(Vector2i cellPos, GridCell* cellTo
 	//	}
 	//}
 
-	if (cellPos.x == 0 || cellPos.x == gridSize.x)
+	if (cellPos.x < 0 || cellPos.x > gridSize.x)
+	{
+		OutputDebugStringA("");
 		return;
+	}
 
-	if (cellPos.y == 0 || cellPos.y == gridSize.y)
+	if (cellPos.y < 0 || cellPos.y > gridSize.y)
+	{
+		OutputDebugStringA("");
 		return;
+	}
 
 	int ID = CalculateArrayIDFromCellPos(Vector2i(cellPos.x - 1, cellPos.y - 1));
 	if (ID != INT_MAX)
@@ -170,9 +176,9 @@ Vector2i SpatialGrid::CalculateCellPos(Vector2f worldPos)
 int SpatialGrid::CalculateArrayIDFromCellPos(Vector2i cell_pos)
 {
 	//if outside the grid then disregard
-	if (cell_pos.x > 0 &&
+	if (cell_pos.x >= 0 &&
 		cell_pos.x < gridSize.x &&
-		cell_pos.y > 0 &&
+		cell_pos.y >= 0 &&
 		cell_pos.y < gridSize.y)
 	{
 		if ((cell_pos.y * gridSize.x) + cell_pos.x > totalCells && (cell_pos.y * gridSize.x) + cell_pos.x != INT_MAX)

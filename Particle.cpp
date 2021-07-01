@@ -21,8 +21,8 @@ Particle::~Particle()
 void Particle::Create()
 {
 	model = PhysicsModel();
-
 	isAlive = true;
+	isStatic = false;
 }
 
 void Particle::CreateRandom()
@@ -43,6 +43,7 @@ void Particle::CreateRandom()
 void Particle::Kill()
 {
 	isAlive = false;
+	isStatic = false;
 	model.Reset();
 }
 
@@ -64,6 +65,9 @@ PhysicsModel* Particle::GetModel()
 void Particle::ResolveCollision(Particle* particle)
 {
 	if (this == particle)
+		return;
+
+	if (this->isStatic)
 		return;
 
 	//////COLLISION RESPONSE
@@ -102,8 +106,8 @@ void Particle::ResolveCollision(Particle* particle)
 	//newVelTwo.x = (particle->GetModel()->GetVelocity().x * (particle->GetModel()->GetMass() - GetModel()->GetMass()) + (2 * GetModel()->GetMass() * GetModel()->GetVelocity().x)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
 	//newVelTwo.y = (particle->GetModel()->GetVelocity().y * (particle->GetModel()->GetMass() - GetModel()->GetMass()) + (2 * GetModel()->GetMass() * GetModel()->GetVelocity().y)) / (GetModel()->GetMass() + particle->GetModel()->GetMass());
 
-	GetModel()->SetVelocity(newVelOne * abs(DAMPENING));
-	particle->GetModel()->SetVelocity(newVelTwo * abs(DAMPENING));
+	//GetModel()->SetVelocity(newVelOne * abs(DAMPENING));
+	//particle->GetModel()->SetVelocity(newVelTwo * abs(DAMPENING));
 }
 
 float Particle::GetColliderRadius()
@@ -116,5 +120,6 @@ void Particle::Update(float DeltaTime)
 	if (!isAlive)
 		return;
 
-	model.Update(DeltaTime);
+	if(isStatic == false)
+		model.UpdateSPH(DeltaTime);
 }

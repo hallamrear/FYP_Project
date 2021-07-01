@@ -6,6 +6,21 @@
 
 #include <iostream>
 
+
+//TODO : NOT MINE
+void PhysicsModel::updateSpringIndex(int _from, int _to)
+{
+	for (int i = 0; i < (int)m_particleSprings.size(); ++i)
+	{
+		if (m_particleSprings[i] == _from)
+		{
+			if (_to > -1) m_particleSprings[i] = _to;
+			else m_particleSprings.erase(m_particleSprings.begin() + i);
+			break;
+		}
+	}
+}
+
 PhysicsModel::PhysicsModel()
 {
 	isResting = false;
@@ -78,22 +93,6 @@ void PhysicsModel::ApplyExternalForce(Vector2f force)
 		externalForce += force;
 }
 
-void PhysicsModel::Update(float DeltaTime)
-{
-	netForce = Vector2f();
-
-	CalculateParticleDensityAndPressure();
-	UpdateSPH();
-
-	previousPosition = position;
-
-	acceleration = (netForce / density);
-	velocity = velocity + (DeltaTime * acceleration = (netForce / density));
-	position = position + (velocity * DeltaTime);
-
-	EnforceEdges();
-}
-
 void PhysicsModel::EnforceEdges()
 {
 	// enforce boundary conditions
@@ -134,65 +133,107 @@ void PhysicsModel::Reset()
 	pressure = 5.0f;
 }
 
-void PhysicsModel::CalculateParticleDensityAndPressure()
+void PhysicsModel::UpdateSPH(float DeltaTime)
 {
-	//could make equal to 0;
-	density = initialDensity;
-	density += mass * Poly6(0.0f);
+	velocity += GRAVITY / density;
 
-	for (auto p : LocalParticles)
-	{
-		Vector2f diff = position - p->GetModel()->GetPosition();
-		float dist = diff.GetLength();
+	//Viscosity
+	CalculateViscosity(DeltaTime);
 
-		density += (p->GetModel()->GetMass() * Poly6(dist * dist));
+	//Update position
+	previousPosition = position;
+	position += velocity * DeltaTime;
 
-	}
-	//could remove max;
-	//pressure = std::max(GAS_CONSTANT * (density - REST_DENSITY), 0.0f);
-	pressure = GAS_CONSTANT * (density - REST_DENSITY);
+	//Density
+	CalculateDoubleDensity(DeltaTime);
 
-	/*std::string s = "Pressure: " + std::to_string(pressure) + '\n';
-	s += "Density : " + std::to_string(density) + '\n';
-	OutputDebugStringA(s.c_str());*/
+	//Make new velocity
+	velocity = (position - previousPosition) / DeltaTime;
+
+	position += velocity * DeltaTime;
+
+	//Enforce bounds
+	EnforceEdges();
 }
 
-void PhysicsModel::UpdateSPH()
+
+void PhysicsModel::CalculateDoubleDensity(float DeltaTime)
 {
-	Vector2f fPressure;
-	Vector2f sumPressure;
-	Vector2f sumViscosity;
-	Vector2f fViscosity;
-	Vector2f fSurfaceTension;
-
-	for (auto p : LocalParticles)
+	float density = 0;
+	float neardensity = 0;
+	for (auto& j : LocalParticles)
 	{
-		Vector2f diff = position - p->GetModel()->GetPosition();
-		float dist = diff.GetLength();
-
-		if (dist != 0.0f)
+		if (j->isStatic == false)
 		{
-			sumPressure += diff.GetNormalized() * (p->GetModel()->mass / p->GetModel()->density) *
-				((pressure + p->GetModel()->pressure) / 2)
-				* Spiky(dist);
-
-			sumViscosity += diff.GetNormalized() * (p->GetModel()->mass / p->GetModel()->density) *
-				(p->GetModel()->GetVelocity() - velocity) * ViscoKernel(dist);
+			Vector2f diff = j->GetModel()->position - position;
+			float dist = diff.GetLength();
+			float q = dist / PARTICLE_INTERACTION_DISTANCE;
+			if (q < 1 && q != 0)
+			{
+				density += (1.0f - q) * (1.0f - q);
+				neardensity += (1.0f - q) * (1.0f - q) * (1.0f - q);
+			}
 		}
 	}
 
-	if (LocalParticles.size() != 0)
+	float knear = NEAR_STIFFNESS_PARAM;
+
+	float P = GAS_CONSTANT * (density - REST_DENSITY);
+	float Pnear = knear * neardensity;
+	Vector2f dx = Vector2f();
+	for (auto& j : LocalParticles)
 	{
-		fPressure = sumPressure;
-		fViscosity = VISCOSITY_CONSTANT * sumViscosity;
-
-		netForce += fPressure;
-		netForce += fViscosity;
-		netForce += fSurfaceTension;
+		if (j->isStatic == false)
+		{
+			Vector2f rij = j->GetModel()->position - position;
+			float rijmag = rij.GetLength();
+			float q = rijmag / PARTICLE_INTERACTION_DISTANCE;
+			if (q < 1 && q != 0)
+			{
+				Vector2f rij_n = rij.GetNormalized();
+				//Incompressibility relaxation
+				Vector2f D = rij_n * (DeltaTime * DeltaTime * (P * (1.0f - q)) + Pnear * (1.0f - q) * (1.0f - q));
+				j->GetModel()->position += (D / 2);
+				dx -= (D / 2);
+			}
+		}
 	}
+	position += dx;
 
-	netForce += density * GRAVITY;
+	this->density = density;
+	this->nearDensity = neardensity;
 }
+
+void PhysicsModel::CalculatePressure()
+{
+
+}
+
+void PhysicsModel::CalculateViscosity(float DeltaTime)
+{
+	for (auto& j : LocalParticles)
+	{
+		if (j->isStatic == false)
+		{
+			Vector2f diff = (j->GetModel()->position - position);
+			float q = diff.GetLength() / PARTICLE_INTERACTION_DISTANCE;
+
+			if (q < 1 && q != 0)
+			{
+				Vector2f diff_n = diff.GetNormalized();
+				float u = (velocity - j->GetModel()->velocity).Dot(diff_n);
+				if (u > 0)
+				{
+					//TODO : dunno if this is legit
+					Vector2f impulse = diff_n * ((1 - q) * (VISCOSITY_CONSTANT_SIGMA * u + VISCOSITY_CONSTANT_BETA * u * u)) * DeltaTime;
+					velocity += (-impulse / 2.0f);
+					j->GetModel()->velocity += (impulse / 2.0f);
+				}
+			}
+		}
+	}
+}
+
 
 //Poly6 Kernel for Density calculations
 float PhysicsModel::Poly6(float radius_square)

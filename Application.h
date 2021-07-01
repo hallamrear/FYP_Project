@@ -18,7 +18,10 @@ class Application
 
 	Simulation* simulation;
 
-	bool addedThisFrame;
+	bool spaceIsHeld = false;
+
+	bool emitterActive = false;
+	Vector2f emitterPosition;
 
 public:
 	Application(float width, float height);

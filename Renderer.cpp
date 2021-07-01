@@ -26,6 +26,13 @@ HRESULT Renderer::Init(int width, int height)
     if(GraphicsDevice::Get()->GetIsInitialised() == false)
         GraphicsDevice::Get()->Init(width, height);
 
+    if (!font.loadFromFile("fonts/arial.ttf"))
+    {
+        // error...
+        OutputDebugStringA("Renderer: FAILED TO LOAD TEXT FROM FILE");
+        return E_FAIL;
+    }
+
     hr = S_OK;
 
     return hr;
@@ -87,6 +94,17 @@ void Renderer::RenderLine_Impl(Vector2f start, Vector2f end, float thickness, sf
     GraphicsDevice::GetWindow()->draw(points, 4, sf::Quads);
 }
 
+void Renderer::RenderText_Impl(std::string str, float size, Vector2f pos, sf::Color color)
+{
+    sf::Text text;
+    text.setFont(font);
+    text.setPosition(pos.x, pos.y);
+    text.setString(str);
+    text.setCharacterSize(24);
+    text.setFillColor(color);
+    GraphicsDevice::GetWindow()->draw(text);
+}
+
 void Renderer::Render_Impl(Particle* particle)
 {
     Vector2f dir = Vector2f(particle->GetModel()->GetVelocity());
@@ -97,26 +115,24 @@ void Renderer::Render_Impl(Particle* particle)
     collider.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
     collider.setRadius(r);
     collider.setOrigin(r, r);
-    collider.setOutlineThickness(2.0f);
+    collider.setOutlineThickness(1.0f);
 
-    if (particle->GetModel()->IsResting())
+    if (particle->isStatic)
         collider.setOutlineColor(sf::Color::Yellow);
     else
         collider.setOutlineColor(sf::Color::Red);
 
     collider.setFillColor(sf::Color::Transparent);
-    collider.setFillColor(sf::Color::Red);
     GraphicsDevice::GetWindow()->draw(collider);
 
-
-    //sf::CircleShape search;
-    //r = PARTICLE_SEARCH_DISTANCE;
-    //search.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
-    //search.setRadius(r);
-    //search.setOrigin(r, r);
-    //search.setOutlineThickness(2.0f);
-    //search.setOutlineColor(sf::Color::White);
-    //search.setFillColor(sf::Color::Transparent);
+    sf::CircleShape search;
+    r = PARTICLE_INTERACTION_DISTANCE;
+    search.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
+    search.setRadius(r);
+    search.setOrigin(r, r);
+    search.setOutlineThickness(1.0f);
+    search.setOutlineColor(sf::Color::White);
+    search.setFillColor(sf::Color::Transparent);
     //GraphicsDevice::GetWindow()->draw(search);
 
     RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + particle->GetModel()->GetVelocity(), 2.0f, sf::Color::Yellow);
@@ -139,6 +155,11 @@ void Renderer::Render(sf::Shape* shape)
 void Renderer::Render(Particle* particle)
 {
     Get()->Render_Impl(particle);
+}
+
+void Renderer::RenderText(std::string str, float size, Vector2f pos, sf::Color color)
+{
+    Get()->RenderText_Impl(str, size, pos, color);
 }
 
 void Renderer::RenderLine(Vector2f start, Vector2f end, float thickness, sf::Color color)

@@ -3,7 +3,7 @@
 #include "SimConsts.h"
 
 class Particle
-{
+{	
 private:
 	float colliderRadius;
 	PhysicsModel model;
@@ -11,6 +11,7 @@ private:
 public:
 	UINT poolID;
 	bool isAlive;
+	bool isStatic;
 
 	Particle();
 	~Particle();

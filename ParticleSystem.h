@@ -25,7 +25,6 @@ public:
 	void KillParticle(Particle* particle);
 
 	void Update(float DeltaTime);
-
 	void Render();
 
 };

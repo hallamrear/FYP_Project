@@ -5,6 +5,19 @@ class Particle;
 
 class PhysicsModel
 {
+	//TODO : NOT MINE
+	std::vector<int> m_particleSprings;
+	//----------------------------------------------------------------------------------------------------------------------
+	/// \brief updateSpringIndex  checks if there is a spring with index from and if so changes it to to
+	///                           if to == -1 then it deletes that spring index from particleSprings
+	/// \param[in] _from          index of spring to change
+	/// \param[in] _to            index of spring to change to
+	 //----------------------------------------------------------------------------------------------------------------------
+	void updateSpringIndex(int _from, int _to);
+	//TODO : NOT MINE
+	typedef struct spring { int indexi, indexj; float L; int count; bool alive; } Spring;
+
+
 private:
 	bool isResting;
 	Vector2f previousPosition;
@@ -16,6 +29,7 @@ private:
 	float pressure;
 	float viscosity;
 	float mass;
+	float nearDensity;
 
 	float initialDensity;
 
@@ -23,8 +37,10 @@ private:
 	float Spiky(float radius);
 	float ViscoKernel(float radius);
 
-	void CalculateParticleDensityAndPressure();
-	void UpdateSPH();
+	void CalculateDoubleDensity(float DeltaTime);
+	void CalculatePressure();
+	void CalculateViscosity(float DeltaTime);
+
 	void EnforceEdges();
 
 public:
@@ -41,11 +57,11 @@ public:
 	void SetVelocity(Vector2f velocity);
 	float GetMass();
 	void SetMass(float mass);
+	void UpdateSPH(float DeltaTime);
 
 	bool IsResting();
 
 	void ApplyExternalForce(Vector2f force);
-	void Update(float DeltaTime);
 	void Reset();
 };
 

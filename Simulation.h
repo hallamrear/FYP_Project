@@ -27,7 +27,10 @@ public:
 	Simulation(int particle_count , Vector2f world_size, Vector2i grid_size);
 	~Simulation();
 
+	const ParticleSystem* const GetParticleSystem();
+
 	void ResetSimulation();
+	void ResetSimulationToExample();
 	void ToggleIsRunning();
 
 	Particle* AddParticle(Vector2i mouseLocation);

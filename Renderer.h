@@ -12,6 +12,8 @@ class Renderer
 private:
 	static Renderer* instance;
 
+	sf::Font font;
+
 	int WindowWidth;
 	int WindowHeight;
 
@@ -24,6 +26,7 @@ private:
 	void Render_Impl(sf::Shape* shape);
 	void Render_Impl(sf::Vector2f position, sf::Vector2f direction, float length);
 	void RenderLine_Impl(Vector2f start, Vector2f end, float thickness, sf::Color color);
+	void RenderText_Impl(std::string str, float size, Vector2f pos, sf::Color color);
 
 public:
 	Renderer(const Renderer&) = delete;
@@ -36,6 +39,7 @@ public:
 	void PrepareFrame();
 	void PresentFrame();
 
+	static void RenderText(std::string str, float size, Vector2f pos, sf::Color color);
 	static void RenderLine(Vector2f start, Vector2f end, float thickness, sf::Color color);
 	static void Render(sf::Vector2f position, sf::Vector2f direction, float length);
 	static void Render(Particle* particle);
