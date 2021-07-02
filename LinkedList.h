@@ -1,7 +1,6 @@
 #pragma once
 
 class Particle;
-//TODO : POSSIBLY TEMPLATE
 
 class LinkedListNode
 {

@@ -6,21 +6,6 @@
 
 #include <iostream>
 
-
-//TODO : NOT MINE
-void PhysicsModel::updateSpringIndex(int _from, int _to)
-{
-	for (int i = 0; i < (int)m_particleSprings.size(); ++i)
-	{
-		if (m_particleSprings[i] == _from)
-		{
-			if (_to > -1) m_particleSprings[i] = _to;
-			else m_particleSprings.erase(m_particleSprings.begin() + i);
-			break;
-		}
-	}
-}
-
 PhysicsModel::PhysicsModel()
 {
 	isResting = false;

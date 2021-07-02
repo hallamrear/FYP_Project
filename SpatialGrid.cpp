@@ -220,17 +220,11 @@ void SpatialGrid::RenderGrid()
 
 			shape.setFillColor(sf::Color::Transparent);
 
-			for (int n = 0; n < cells[(x * gridSize.y) + y].neighbours.size(); n++)
-			{
-				if (cells[(x * gridSize.y) + y].neighbours[n]->particles.size() > 0)
-					shape.setFillColor(sf::Color::Cyan);
-			}
-
 			if (cells[(x * gridSize.y) + y].particles.size() > 0)
 				shape.setFillColor(sf::Color::Blue);
 
 			shape.setPosition(position);
-			Renderer::Render(&shape);
+			Renderer::RenderShape(&shape);
 		}
 	}
 }

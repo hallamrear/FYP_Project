@@ -17,13 +17,20 @@ Simulation::Simulation(
 	cellSize.x = world_size.x / grid_size.x;
 	cellSize.y = world_size.y / grid_size.y;
 
+
+	Vector2f marchingSize;
+	marchingSize.x = world_size.x / 80;
+	marchingSize.y = world_size.y / 45;
+
 	grid = new SpatialGrid(grid_size, cellSize);
+	marchingGrid = new SpatialGrid(Vector2i(96, 54), marchingSize);
 
 	particleSystem = new ParticleSystem(particle_count);
 
 	ResetSimulation();
 
 	isRunning = true;
+	isRenderingVelocities = false;
 }
 
 Simulation::~Simulation()
@@ -38,29 +45,27 @@ const ParticleSystem* const Simulation::GetParticleSystem()
 
 void Simulation::ResetSimulation()
 {
-	int size_x = WORLD_SIZE.x / 20;
-	int size_y = WORLD_SIZE.y / 20;
-
 	for (int i = 0; i < particleSystem->livingParticleCount; i++)
 	{
 		particleSystem->KillParticle(particleSystem->LivingParticles[i]);
 	}	
 
-	for (int x = WORLD_EDGE; x < WORLD_SIZE.x - WORLD_EDGE; x += PARTICLE_COLLIDER_SIZE)
+	for (int X = WORLD_EDGE; X < WORLD_SIZE.x - WORLD_EDGE; X += PARTICLE_COLLIDER_SIZE)
 	{
-		Particle* p = AddParticle(Vector2i(x, 0.0f));
-		p->isStatic = true;
-		p = AddParticle(Vector2i(x, WORLD_SIZE.y));
-		p->isStatic = true;
+		Particle* pBot = AddParticle(Vector2i(X, WORLD_EDGE));
+		pBot->isStatic = true;
+
+		Particle* pTop = AddParticle(Vector2i(X, WORLD_SIZE.y - WORLD_EDGE));
+		pTop->isStatic = true;
 	}
 
-	for (int y = WORLD_EDGE; y < WORLD_SIZE.y - WORLD_EDGE; y += PARTICLE_COLLIDER_SIZE)
+	for (int Y = WORLD_EDGE; Y < WORLD_SIZE.y - WORLD_EDGE - PARTICLE_COLLIDER_SIZE; Y += PARTICLE_COLLIDER_SIZE)
 	{
-		Particle* p = AddParticle(Vector2i(0.0f, y));
-		p->isStatic = true; 
-		
-		p = AddParticle(Vector2i(WORLD_SIZE.x, y));
-		p->isStatic = true;
+		Particle* pBot = AddParticle(Vector2i(WORLD_EDGE, Y));
+		pBot->isStatic = true;
+
+		Particle* pTop = AddParticle(Vector2i(WORLD_SIZE.x - WORLD_EDGE, Y));
+		pTop->isStatic = true;
 	}
 }
 
@@ -145,11 +150,13 @@ void Simulation::Update(float DeltaTime)
 	if (isRunning)
 	{
 		grid->ClearCells();
+		marchingGrid->ClearCells();
 
 		for (int i = 0; i < particleSystem->livingParticleCount; i++)
 		{
 			//Populating grid with particles for this frame.
 			grid->Populate(particleSystem->LivingParticles[i]);
+			marchingGrid->Populate(particleSystem->LivingParticles[i]);
 		}
 
 		std::vector<Particle*> allLocalParticles;
@@ -172,21 +179,29 @@ void Simulation::Update(float DeltaTime)
 				{
 					//particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
 
-					//If both static, no collision resolution
-					if (particleSystem->LivingParticles[i]->isStatic == true && allLocalParticles[neighbours]->isStatic == true)
-						continue;
-					
-					//if this is static and the other isnt, resolve from their perspective.
-					if (particleSystem->LivingParticles[i]->isStatic == true && allLocalParticles[neighbours]->isStatic == false)
-						allLocalParticles[neighbours]->ResolveCollision(particleSystem->LivingParticles[i]); 
-
-					//if both non static, normal resolution
 					if (particleSystem->LivingParticles[i]->isStatic == false && allLocalParticles[neighbours]->isStatic == false)
-						particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
+					{
+						//Both non static, no collision bc physics
+					}
 
-					//if this isnt static and the other is, resolve from our perspective.
-					if (particleSystem->LivingParticles[i]->isStatic == false && allLocalParticles[neighbours]->isStatic == true)
+					if (particleSystem->LivingParticles[i]->isStatic == true && allLocalParticles[neighbours]->isStatic == false)
+					{
+						//solve from their perspective
 						allLocalParticles[neighbours]->ResolveCollision(particleSystem->LivingParticles[i]);
+					}
+
+					if (particleSystem->LivingParticles[i]->isStatic == false && allLocalParticles[neighbours]->isStatic == true)
+					{
+						//Solve the collision from my perspective
+						particleSystem->LivingParticles[i]->ResolveCollision(allLocalParticles[neighbours]);
+					}
+
+					if (particleSystem->LivingParticles[i]->isStatic == true && allLocalParticles[neighbours]->isStatic == true)
+					{
+						//Both static, no collision, dont want them to display each other
+					}
+
+
 
 				}
 			}
@@ -197,11 +212,12 @@ void Simulation::Update(float DeltaTime)
 
 void Simulation::Render()
 {
+	//marchingGrid->RenderGrid();
 	particleSystem->Render();
-
+	
 	if (particleSystem->livingParticleCount > 0)
 	{		
-		//grid->RenderMarchingSquares();
+		//marchingGrid->RenderMarchingSquares();
 	}
 
 	if (isRunning == false)

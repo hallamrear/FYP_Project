@@ -111,5 +111,5 @@ void ParticleSystem::Update(float DeltaTime)
 void ParticleSystem::Render()
 {
 	for(int i = 0; i < livingParticleCount; i++)
-		Renderer::Render(LivingParticles[i]);
+		Renderer::RenderParticle(LivingParticles[i]);
 }

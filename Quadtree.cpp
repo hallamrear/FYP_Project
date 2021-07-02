@@ -72,7 +72,7 @@ void Quadtree::Subdivide()
 std::vector<Particle*> Quadtree::Retrieve(std::vector<Particle*> particles_retrieved, TreeBoundary boundary)
 {
 	//TODO : IMPL?
-
+	
 	return particles_retrieved;
 }
 

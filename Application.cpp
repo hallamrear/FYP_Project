@@ -146,8 +146,6 @@ void Application::HandleMouseInput(float DeltaTime)
 	{
 		Particle* p = simulation->AddParticle(mouseWindowPos);
 		p->isStatic = true;
-
-		//simulation->RemoveParticle(mouseWindowPos);
 	}
 }
 
@@ -170,6 +168,8 @@ void Application::Update(float DeltaTime)
 	{
 		simulation->AddParticle(Vector2i(emitterPosition.x, emitterPosition.y));
 	}
+
+	std::string s = std::to_string(mouseWindowPos.x) + ", " + std::to_string(mouseWindowPos.y);
 
 	simulation->Update(DeltaTime);
 }

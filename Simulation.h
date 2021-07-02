@@ -13,6 +13,7 @@ class PhysicsModel;
 class Simulation
 {
 	bool isRunning;
+	bool isRenderingVelocities;
 
 	//Simulation Variables
 	int particleCount;
@@ -20,6 +21,7 @@ class Simulation
 	RENDER_STATE renderMode;
 	ParticleSystem* particleSystem;
 	SpatialGrid* grid;
+	SpatialGrid* marchingGrid;
 
 	void GetLocalParticlesFromGrid(std::vector<Particle*>* local, Particle* particle);
 

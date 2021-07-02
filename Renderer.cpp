@@ -56,12 +56,12 @@ void Renderer::PresentFrame()
     GraphicsDevice::GetWindow()->display();
 }
 
-void Renderer::Render_Impl(sf::Shape* shape)
+void Renderer::RenderShape_Impl(sf::Shape* shape)
 {
     GraphicsDevice::GetWindow()->draw(*shape);
 }
 
-void Renderer::Render_Impl(sf::Vector2f position, sf::Vector2f direction, float length)
+void Renderer::RenderVector_Impl(sf::Vector2f position, sf::Vector2f direction, float length)
 {
     sf::Vertex line[] =
     {
@@ -105,11 +105,8 @@ void Renderer::RenderText_Impl(std::string str, float size, Vector2f pos, sf::Co
     GraphicsDevice::GetWindow()->draw(text);
 }
 
-void Renderer::Render_Impl(Particle* particle)
+void Renderer::RenderParticle_Impl(Particle* particle)
 {
-    Vector2f dir = Vector2f(particle->GetModel()->GetVelocity());
-    dir.GetNormalized();
-
     sf::CircleShape collider;
     float r = particle->GetColliderRadius();
     collider.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
@@ -124,19 +121,15 @@ void Renderer::Render_Impl(Particle* particle)
 
     collider.setFillColor(sf::Color::Transparent);
     GraphicsDevice::GetWindow()->draw(collider);
+}
 
-    sf::CircleShape search;
-    r = PARTICLE_INTERACTION_DISTANCE;
-    search.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
-    search.setRadius(r);
-    search.setOrigin(r, r);
-    search.setOutlineThickness(1.0f);
-    search.setOutlineColor(sf::Color::White);
-    search.setFillColor(sf::Color::Transparent);
-    //GraphicsDevice::GetWindow()->draw(search);
+void Renderer::RenderParticleDetailed_Impl(Particle* particle)
+{
+    RenderParticle_Impl(particle);
 
-    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + particle->GetModel()->GetVelocity(), 2.0f, sf::Color::Yellow);
-    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + particle->GetModel()->netForce, 5.0f, sf::Color::Green);
+    Vector2f dir = Vector2f(particle->GetModel()->GetVelocity());
+    dir.GetNormalized();
+    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + dir, 2.0f, sf::Color::Yellow);
 
     sf::RectangleShape rect;
     rect.setSize(sf::Vector2f(2.0f, 2.0f));
@@ -147,14 +140,9 @@ void Renderer::Render_Impl(Particle* particle)
     GraphicsDevice::GetWindow()->draw(rect);
 }
 
-void Renderer::Render(sf::Shape* shape)
+void Renderer::RenderShape(sf::Shape* shape)
 {
-    Get()->Render_Impl(shape);
-}
-
-void Renderer::Render(Particle* particle)
-{
-    Get()->Render_Impl(particle);
+    Get()->RenderShape_Impl(shape);
 }
 
 void Renderer::RenderText(std::string str, float size, Vector2f pos, sf::Color color)
@@ -167,8 +155,18 @@ void Renderer::RenderLine(Vector2f start, Vector2f end, float thickness, sf::Col
     Get()->RenderLine_Impl(start, end, thickness, color);
 }
 
-void Renderer::Render(sf::Vector2f position, sf::Vector2f direction, float length)
+void Renderer::RenderVector(sf::Vector2f position, sf::Vector2f direction, float length)
 {
-    Get()->Render_Impl(position, direction, length);
+    Get()->RenderVector_Impl(position, direction, length);
+}
+
+void Renderer::RenderParticle(Particle* particle)
+{
+    Get()->RenderParticle_Impl(particle);
+}
+
+void Renderer::RenderParticleDetailed(Particle* particle)
+{
+    Get()->RenderParticleDetailed_Impl(particle);
 }
 

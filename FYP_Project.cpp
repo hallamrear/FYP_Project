@@ -20,7 +20,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
  
     MSG msg = MSG{};
 
-    // TODO: Place code here.
     Application* application;
     application = new Application((int)(WORLD_SIZE.x), (int)(WORLD_SIZE.y));
 
