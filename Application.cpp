@@ -19,24 +19,6 @@ Application::Application(float width, float height)
 	isInitialised = false;
 
 	mouseDelta = Vector2f();
-
-	//Particle Info
-	DEFAULT_PARTICLE_MASS = 1.0f;
-	PARTICLE_COLLIDER_SIZE = 5.0f;
-	PARTICLE_INTERACTION_DISTANCE = 100.0f;
-
-	//Simulation stuff
-	STARTING_PARTICLE_COUNT = 1000;
-	MAX_PARTICLE_COUNT = 10000;
-	KERNEL_HEIGHT = 16.0f;
-	GRAVITY = Vector2f(0.0f, 9.81f);
-	DAMPENING = -0.75f;
-	VISCOSITY_CONSTANT_BETA = 0.1f;
-	VISCOSITY_CONSTANT_SIGMA = 0.0f;
-	GAS_CONSTANT = 0.04F;
-	NEAR_STIFFNESS_PARAM = 0.01F;
-	REST_DENSITY = 10.0f;
-
 }
 
 Application::~Application()
@@ -58,6 +40,7 @@ bool Application::IsInitialised()
 void Application::SetRunning(bool state)
 {
 	isRunning = true;
+	shiftIsHeld = false;
 }
 
 bool Application::Init()
@@ -72,8 +55,6 @@ bool Application::Init()
 		MAX_PARTICLE_COUNT,
 		WORLD_SIZE,
 		GRID_SIZE);
-
-	emitterPosition = Vector2f(WORLD_SIZE.x / 2, WORLD_SIZE.y / 8);
 
 	isInitialised = true;
 	return isInitialised;
@@ -103,30 +84,33 @@ void Application::HandleKeyboardInput(float DeltaTime)
 		spaceIsHeld = false;
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::L) && emitterActive == false)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && shiftIsHeld == false)
 	{
-		emitterActive = true;
+		shiftIsHeld = true;
+		simulation->IncrementRenderingDetails();
 	}
 
-	if (emitterActive == true && sf::Keyboard::isKeyPressed(sf::Keyboard::L) == false)
+	if (shiftIsHeld == true && sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) == false)
 	{
-		emitterActive = false;
+		shiftIsHeld = false;
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-	{
 		simulation->ResetSimulation();
-	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::T))
-	{
-		simulation->ResetSimulationToExample();
-	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+		simulation->ResetSimulationToExampleOne();
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+		simulation->ResetSimulationToExampleTwo();
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+		simulation->ResetSimulationToExampleThree();
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 	{
 		std::string s;
-		s = "Particles: " + std::to_string(simulation->GetParticleSystem()->livingParticleCount) + '/' + std::to_string(simulation->GetParticleSystem()->MaxParticleCount) + '\n';
+		s = "Particles: " + std::to_string(mouseWindowPos.x) + '/' + std::to_string(mouseWindowPos.y) + '\n';
 		OutputDebugStringA(s.c_str());
 	}
 
@@ -164,22 +148,12 @@ void Application::Update(float DeltaTime)
 	HandleMouseInput(DeltaTime);
 	HandleKeyboardInput(DeltaTime);
 
-	if (emitterActive)
-	{
-		simulation->AddParticle(Vector2i(emitterPosition.x, emitterPosition.y));
-	}
-
-	std::string s = std::to_string(mouseWindowPos.x) + ", " + std::to_string(mouseWindowPos.y);
-
 	simulation->Update(DeltaTime);
 }
 
 void Application::Render()
 {
 	Renderer::Get()->PrepareFrame();
-
-	if (emitterActive)
-		Renderer::RenderText("Emitter active", 24.0f, Vector2f(50.0f, 50.0f), sf::Color::Blue);
 
 	simulation->Render();
 

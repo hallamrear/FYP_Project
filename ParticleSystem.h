@@ -7,6 +7,7 @@ class ParticleSystem
 private:
 	//Linked list of particles which are dead and can be reallocated
 	LinkedListNode* deadParticlesList;
+	int isRenderingDetails = 0;
 
 public:
 	//Exposing to simulation so i dont have to loop twice
@@ -16,6 +17,8 @@ public:
 	UINT MaxParticleCount;
 	UINT livingParticleCount;
 	UINT deadParticleCount;
+
+	void SetParticleRenderDetail(int state);
 
 	ParticleSystem(int MaxParticleCount);
 	~ParticleSystem();

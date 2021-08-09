@@ -2,6 +2,7 @@
 #include "SpatialGrid.h"
 #include "Particle.h"
 #include "SFML\Graphics.hpp"
+#include "Overloads.h"
 #include "Renderer.h"
 
 void SpatialGrid::PopulateCellsWithNeighbours(Vector2i cellPos, GridCell* cellToPopulate)
@@ -116,6 +117,13 @@ SpatialGrid::SpatialGrid(Vector2i grid_size, Vector2f cell_size)
 	cellSize = cell_size;
 	totalCells = grid_size.x * grid_size.y;
 
+	mb_size = WORLD_SIZE.x * WORLD_SIZE.y * 4;
+	mb_pixels = new sf::Uint8[mb_size];
+
+	mb_img.loadFromMemory(mb_pixels, mb_size);
+	mb_tex.loadFromImage(mb_img);
+	mb_sprite.setTexture(mb_tex);
+
 	cells = new GridCell[totalCells];
 
 	GridCell* cell;
@@ -162,6 +170,7 @@ void SpatialGrid::ClearCells()
 	for (int i = 0; i < totalCells; i++)
 	{
 		cells[i].particles.clear();
+		cells[i].UpdatePointWeight();
 	}
 }
 
@@ -234,24 +243,20 @@ void SpatialGrid::RenderMarchingSquares()
 	float x = 0.0f;
 	float y = 0.0f;
 	int draw_case = 0;
-	int vertex_count = 0;
-
-	std::vector<sf::Vertex> line_verts;
 
 	for (int i = 0; i < gridSize.x; i++)
 	{
 		for (int j = 0; j < gridSize.y; j++)
 		{
-			vertex_count = 0;
 			draw_case = CalculateWeights(i, j);
 
 			x = i * cellSize.x;
 			y = j * cellSize.y;
 
 			sf::Vector2f a = sf::Vector2f(x + (cellSize.x * 0.5f), y);
-			sf::Vector2f b = sf::Vector2f(x + (cellSize.x), y + (cellSize.y * 0.5f));
+			sf::Vector2f b = sf::Vector2f(x + (cellSize.x)	     , y + (cellSize.y * 0.5f));
 			sf::Vector2f c = sf::Vector2f(x + (cellSize.x * 0.5f), y + (cellSize.y));
-			sf::Vector2f d = sf::Vector2f(x, y + (cellSize.y * 0.5f));
+			sf::Vector2f d = sf::Vector2f(x						 , y + (cellSize.y * 0.5f));
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
@@ -263,8 +268,8 @@ void SpatialGrid::RenderMarchingSquares()
 				old_shape.setPosition(x, y);
 				GraphicsDevice::GetWindow()->draw(old_shape);
 
-				sf::Vertex vert = sf::Vertex(sf::Vector2f(x + (cellSize.x * 0.5f), y + (cellSize.y * 0.5f)));
-				GraphicsDevice::GetWindow()->draw(&vert, 1, sf::Points);
+				if(draw_case != 0)
+					Renderer::RenderText(std::to_string(draw_case), 16.0, Vector2f(x, y), sf::Color::Red);
 			}
 
 			//*--a--*
@@ -272,6 +277,7 @@ void SpatialGrid::RenderMarchingSquares()
 			//d     b
 			//|     |
 			//*--c--*
+			sf::RectangleShape shape;
 
 			switch (draw_case)
 			{
@@ -279,78 +285,58 @@ void SpatialGrid::RenderMarchingSquares()
 
 				break;
 			case 1:
-				line_verts.push_back(sf::Vertex(c));
-				line_verts.push_back(sf::Vertex(d));
-				vertex_count += 2;
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
 				break;
 			case 2:
-				line_verts.push_back(sf::Vertex(b));
-				line_verts.push_back(sf::Vertex(c));
-				vertex_count += 2;
+
+				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
 				break;
 			case 3:
-				line_verts.push_back(sf::Vertex(d));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 2;
+				//
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 4:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 2;
+
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 5:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(d));
-				line_verts.push_back(sf::Vertex(b));
-				line_verts.push_back(sf::Vertex(c));
-				vertex_count += 4;
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+
 				break;
 			case 6:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(c));
-				vertex_count += 2;
+				//
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
 				break;
 			case 7:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(d));
-				vertex_count += 2;
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
 				break;
 			case 8:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(d));
-				vertex_count += 2;
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
 				break;
 			case 9:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(c));
-				vertex_count += 2;
+				//
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
 				break;
 			case 10:
-				line_verts.push_back(sf::Vertex(d));
-				line_verts.push_back(sf::Vertex(c));
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 4;
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 11:
-				line_verts.push_back(sf::Vertex(a));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 2;
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				break;
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 12:
-				line_verts.push_back(sf::Vertex(d));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 2;
+				//
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 13:
-				line_verts.push_back(sf::Vertex(c));
-				line_verts.push_back(sf::Vertex(b));
-				vertex_count += 2;
+				//
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
 				break;
 			case 14:
-				line_verts.push_back(sf::Vertex(c));
-				line_verts.push_back(sf::Vertex(d));
-				vertex_count += 2;
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
 				break;
 			case 15:
 				break;
@@ -359,13 +345,14 @@ void SpatialGrid::RenderMarchingSquares()
 			}
 		}
 	}
-	GraphicsDevice::GetWindow()->draw(line_verts.data(), line_verts.size(), sf::Lines);
 }
 
 int SpatialGrid::CalculateWeights(int i, int j)
 {
-	int threshold = 0;
+	float threshold = 0.0f;
 	GridCell* cell = &cells[(j * gridSize.x) + i];
+
+	UpdateNeighbours(i, j);
 
 	// 0 1 2   * a *
 	// 3 4 5   d   b
@@ -373,77 +360,93 @@ int SpatialGrid::CalculateWeights(int i, int j)
 	int a = 0;
 	int b = 0;
 	int c = 0;
-	int d = 0;
-
-	GridCell* surrounding[9];
-
-	surrounding[0] = &cells[((j - 1) * gridSize.x) + (i + 1)];
-	surrounding[1] = &cells[((j - 1) * gridSize.x) + (i)];
-	surrounding[2] = &cells[((j - 1) * gridSize.x) + (i - 1)];
-	surrounding[3] = &cells[((j    ) * gridSize.x) + (i + 1)];
-	surrounding[4] = nullptr;
-	surrounding[5] = &cells[((j    ) * gridSize.x) + (i - 1)];
-	surrounding[6] = &cells[((j + 1) * gridSize.x) + (i + 1)];
-	surrounding[7] = &cells[((j + 1) * gridSize.x) + (i)];
-	surrounding[8] = &cells[((j + 1) * gridSize.x) + (i - 1)];
+	int d = 0;	
 
 	float TL = 0.0f, TR = 0.0f, BL = 0.0f, BR = 0.0f;
 
 	if (cell->neighbours.size() != 0)
 	{
 		if (surrounding[0])
-			TL += surrounding[0]->PointWeight;
+			if(isnan(surrounding[0]->PointWeight) || surrounding[0]->PointWeight != FLT_MAX)
+				TL += surrounding[0]->PointWeight;
 		if (surrounding[1])
+			if (isnan(surrounding[1]->PointWeight) || surrounding[1]->PointWeight != FLT_MAX)
 			TL += surrounding[1]->PointWeight;
 		if (surrounding[3])
+			if (isnan(surrounding[3]->PointWeight) || surrounding[3]->PointWeight != FLT_MAX)
 			TL += surrounding[3]->PointWeight;
 		if (TL != 0.0f)
 			TL /= 3;
 
 		if (surrounding[1])
-			TR += surrounding[1]->PointWeight;
+			if (isnan(surrounding[1]->PointWeight) || surrounding[1]->PointWeight != FLT_MAX)
+				TR += surrounding[1]->PointWeight;
 		if (surrounding[2])
-			TR += surrounding[2]->PointWeight;
+			if (isnan(surrounding[2]->PointWeight) || surrounding[2]->PointWeight != FLT_MAX)
+				TR += surrounding[2]->PointWeight;
 		if (surrounding[5])
-			TR += surrounding[5]->PointWeight;
+			if (isnan(surrounding[5]->PointWeight) || surrounding[5]->PointWeight != FLT_MAX)
+				TR += surrounding[5]->PointWeight;
 		if (TR != 0.0f)
 			TR /= 3;
 
 		if (surrounding[3])
-			BL += surrounding[3]->PointWeight;
+			if (isnan(surrounding[3]->PointWeight) || surrounding[3]->PointWeight != FLT_MAX)
+				BL += surrounding[3]->PointWeight;
 		if (surrounding[6])
-			BL += surrounding[6]->PointWeight;
+			if (isnan(surrounding[6]->PointWeight) || surrounding[6]->PointWeight != FLT_MAX)
+				BL += surrounding[6]->PointWeight;
 		if (surrounding[7])
-			BL += surrounding[7]->PointWeight;
+			if (isnan(surrounding[7]->PointWeight) || surrounding[7]->PointWeight != FLT_MAX)
+				BL += surrounding[7]->PointWeight;
 		if (BL != 0.0f)
 			BL /= 3;
 
 		if (surrounding[5])
-			BR += surrounding[5]->PointWeight;
+			if (isnan(surrounding[5]->PointWeight) || surrounding[5]->PointWeight != FLT_MAX)
+				BR += surrounding[5]->PointWeight;
 		if (surrounding[7])
-			BR += surrounding[7]->PointWeight;
+			if (isnan(surrounding[7]->PointWeight) || surrounding[7]->PointWeight != FLT_MAX)
+				BR += surrounding[7]->PointWeight;
 		if (surrounding[8])
-			BR += surrounding[8]->PointWeight;
+			if (isnan(surrounding[8]->PointWeight) || surrounding[8]->PointWeight != FLT_MAX)
+				BR += surrounding[8]->PointWeight;
 		if (BR != 0.0f)
 			BR /= 3;
-
-		/*
-		TL = cell->neighbours[0]->PointWeight + cell->neighbours[1]->PointWeight + cell->neighbours[3]->PointWeight / 3;
-		TR = cell->neighbours[1]->PointWeight + cell->neighbours[2]->PointWeight + cell->neighbours[5]->PointWeight / 3;
-		BL = cell->neighbours[3]->PointWeight + cell->neighbours[6]->PointWeight + cell->neighbours[7]->PointWeight / 3;
-		BR = cell->neighbours[5]->PointWeight + cell->neighbours[7]->PointWeight + cell->neighbours[8]->PointWeight / 3;
-		*/
 	}
 
-	if (TL > threshold)
-		a = 1;
-	if (TR > threshold)
-		b = 1;
-	if (BR > threshold)
-		c = 1;
-	if (BL > threshold)
-		d = 1;
+	if (TL > threshold) a = 1;
+	if (TR > threshold) b = 1;
+	if (BR > threshold) c = 1;
+	if (BL > threshold) d = 1;
 
-	return ((a * 8) + (b * 4) + (c * 2) + (d * 1));
+	return (a * 8) + (b * 4) + (c * 2) + d;
 }
 
+void SpatialGrid::UpdateNeighbours(int center_pos_x, int center_pos_y)
+{
+	if (center_pos_x - 1 >= 0 && center_pos_y - 1 >= 0)
+		surrounding[0] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x - 1, center_pos_y - 1))];
+	
+	if (center_pos_y - 1 >= 0)
+		surrounding[1] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x, center_pos_y - 1))];
+	if (center_pos_y - 1 >= 0)
+		surrounding[2] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y - 1))];
+	if (center_pos_x - 1 >= 0)
+		surrounding[3] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x - 1,center_pos_y))];
+
+	surrounding[4] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x,center_pos_y))];
+	surrounding[5] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y))];
+
+	if (center_pos_x - 1 >= 0)
+		surrounding[6] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x - 1,center_pos_y + 1))];
+
+	surrounding[7] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x,center_pos_y + 1))];
+	surrounding[8] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y + 1))];
+
+	for (int i = 0; i < 9; i++)
+	{
+		if(surrounding[i])
+			surrounding[i]->UpdatePointWeight();
+	}
+}

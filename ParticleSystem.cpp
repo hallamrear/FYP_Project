@@ -3,6 +3,11 @@
 #include "Particle.h"
 #include "Renderer.h"
 
+void ParticleSystem::SetParticleRenderDetail(int state)
+{
+    isRenderingDetails = state;
+}
+
 ParticleSystem::ParticleSystem(int MaxParticleCount)
 {
     deadParticleCount = 0;
@@ -110,6 +115,13 @@ void ParticleSystem::Update(float DeltaTime)
 
 void ParticleSystem::Render()
 {
-	for(int i = 0; i < livingParticleCount; i++)
-		Renderer::RenderParticle(LivingParticles[i]);
+    for (int i = 0; i < livingParticleCount; i++)
+    {
+        if (isRenderingDetails == 2 || isRenderingDetails == 3)
+            Renderer::RenderParticleDetailed(LivingParticles[i]);
+        else if (isRenderingDetails == 1)
+            Renderer::RenderParticle(LivingParticles[i]);
+        else
+            return;
+    }
 }

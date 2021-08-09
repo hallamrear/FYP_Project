@@ -2,6 +2,9 @@
 #include "LinkedList.h"
 #include "Vector.h"
 
+
+#include "Renderer.h"
+
 class GridCell
 {
 public:
@@ -9,7 +12,7 @@ public:
 
 	std::vector<GridCell*> neighbours;
 	
-	float PointWeight;
+	float PointWeight = 0.0f;
 
 	GridCell()
 	{
@@ -40,11 +43,20 @@ public:
 
 class SpatialGrid
 {
+	sf::Image mb_img;
+	sf::Sprite mb_sprite;
+	int mb_size = 400 * 400 * 4;
+	sf::Uint8* mb_pixels;
+	sf::Texture mb_tex;
+
+	GridCell* surrounding[9];
+
 	UINT totalCells;
 	GridCell* cells;
 	Vector2f cellSize;
 	Vector2i gridSize;
 	void PopulateCellsWithNeighbours(Vector2i cellPos, GridCell* cellToPopulate);
+	void UpdateNeighbours(int i, int j);
 
 public:
 	/// <param name="grid_size">Number of grid cells in each direction</param>
@@ -64,5 +76,6 @@ public:
 	void RenderMarchingSquares();
 	int CalculateWeights(int i, int j);
 	void RenderGrid();
+	void RenderMetaBalls();
 };
 

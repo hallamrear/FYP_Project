@@ -19,9 +19,7 @@ class Application
 	Simulation* simulation;
 
 	bool spaceIsHeld = false;
-
-	bool emitterActive = false;
-	Vector2f emitterPosition;
+	bool shiftIsHeld = false;
 
 public:
 	Application(float width, float height);

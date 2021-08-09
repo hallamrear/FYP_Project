@@ -2,9 +2,6 @@
 #include "Device.h"
 #include "Vector.h"
 
-#define VS_SHADER "VertexShader.hlsl"
-#define PS_SHADER "PixelShader.hlsl"
-
 class Particle;
 
 class Renderer

@@ -26,12 +26,14 @@ HRESULT Renderer::Init(int width, int height)
     if(GraphicsDevice::Get()->GetIsInitialised() == false)
         GraphicsDevice::Get()->Init(width, height);
 
+#ifndef _DEBUG
     if (!font.loadFromFile("fonts/arial.ttf"))
     {
         // error...
         OutputDebugStringA("Renderer: FAILED TO LOAD TEXT FROM FILE");
         return E_FAIL;
     }
+#endif
 
     hr = S_OK;
 
@@ -100,7 +102,7 @@ void Renderer::RenderText_Impl(std::string str, float size, Vector2f pos, sf::Co
     text.setFont(font);
     text.setPosition(pos.x, pos.y);
     text.setString(str);
-    text.setCharacterSize(24);
+    text.setCharacterSize(size);
     text.setFillColor(color);
     GraphicsDevice::GetWindow()->draw(text);
 }

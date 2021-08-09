@@ -13,7 +13,7 @@ class PhysicsModel;
 class Simulation
 {
 	bool isRunning;
-	bool isRenderingVelocities;
+	int isRenderingDetails;
 
 	//Simulation Variables
 	int particleCount;
@@ -32,8 +32,12 @@ public:
 	const ParticleSystem* const GetParticleSystem();
 
 	void ResetSimulation();
-	void ResetSimulationToExample();
+	void ResetSimulationToExampleOne();
+	void ResetSimulationToExampleTwo();
+	void ResetSimulationToExampleThree();
 	void ToggleIsRunning();
+
+	void IncrementRenderingDetails();
 
 	Particle* AddParticle(Vector2i mouseLocation);
 	void RemoveParticle(Vector2i mouseLocation);

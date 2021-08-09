@@ -130,7 +130,7 @@ void PhysicsModel::UpdateSPH(float DeltaTime)
 	position += velocity * DeltaTime;
 
 	//Density
-	CalculateDoubleDensity(DeltaTime);
+	CalculateDensityAndPressure(DeltaTime);
 
 	//Make new velocity
 	velocity = (position - previousPosition) / DeltaTime;
@@ -142,7 +142,7 @@ void PhysicsModel::UpdateSPH(float DeltaTime)
 }
 
 
-void PhysicsModel::CalculateDoubleDensity(float DeltaTime)
+void PhysicsModel::CalculateDensityAndPressure(float DeltaTime)
 {
 	float density = 0;
 	float neardensity = 0;
@@ -152,46 +152,43 @@ void PhysicsModel::CalculateDoubleDensity(float DeltaTime)
 		{
 			Vector2f diff = j->GetModel()->position - position;
 			float dist = diff.GetLength();
-			float q = dist / PARTICLE_INTERACTION_DISTANCE;
-			if (q < 1 && q != 0)
+			float scale = dist / PARTICLE_INTERACTION_DISTANCE;
+			if (scale)
 			{
-				density += (1.0f - q) * (1.0f - q);
-				neardensity += (1.0f - q) * (1.0f - q) * (1.0f - q);
+				if (scale < 1)
+				{
+					density += (1.0f - scale) * (1.0f - scale);
+					neardensity += (1.0f - scale) * (1.0f - scale) * (1.0f - scale);
+				}
 			}
 		}
 	}
 
-	float knear = NEAR_STIFFNESS_PARAM;
+	float knear = NEAR_STIFFNESS;
 
-	float P = GAS_CONSTANT * (density - REST_DENSITY);
-	float Pnear = knear * neardensity;
-	Vector2f dx = Vector2f();
+	float diffPressure = GAS_CONSTANT * (density - REST_DENSITY);
+	Vector2f deltaP = Vector2f();
 	for (auto& j : LocalParticles)
 	{
 		if (j->isStatic == false)
 		{
 			Vector2f rij = j->GetModel()->position - position;
 			float rijmag = rij.GetLength();
-			float q = rijmag / PARTICLE_INTERACTION_DISTANCE;
-			if (q < 1 && q != 0)
+			float scale = rijmag / PARTICLE_INTERACTION_DISTANCE;
+			if (scale < 1 && scale != 0)
 			{
 				Vector2f rij_n = rij.GetNormalized();
 				//Incompressibility relaxation
-				Vector2f D = rij_n * (DeltaTime * DeltaTime * (P * (1.0f - q)) + Pnear * (1.0f - q) * (1.0f - q));
-				j->GetModel()->position += (D / 2);
-				dx -= (D / 2);
+				Vector2f pressure = rij_n * (DeltaTime * DeltaTime * (diffPressure * (1.0f - scale)) + (NEAR_STIFFNESS * neardensity) * (1.0f - scale) * (1.0f - scale));
+				j->GetModel()->position += (pressure / 2);
+				deltaP -= (pressure / 2);
 			}
 		}
 	}
-	position += dx;
+	position += deltaP;
 
 	this->density = density;
 	this->nearDensity = neardensity;
-}
-
-void PhysicsModel::CalculatePressure()
-{
-
 }
 
 void PhysicsModel::CalculateViscosity(float DeltaTime)
@@ -201,18 +198,19 @@ void PhysicsModel::CalculateViscosity(float DeltaTime)
 		if (j->isStatic == false)
 		{
 			Vector2f diff = (j->GetModel()->position - position);
-			float q = diff.GetLength() / PARTICLE_INTERACTION_DISTANCE;
-
-			if (q < 1 && q != 0)
+			float scale = diff.GetLength() / PARTICLE_INTERACTION_DISTANCE;
+			if(scale != 0)
 			{
-				Vector2f diff_n = diff.GetNormalized();
-				float u = (velocity - j->GetModel()->velocity).Dot(diff_n);
-				if (u > 0)
+				if (scale < 1)
 				{
-					//TODO : dunno if this is legit
-					Vector2f impulse = diff_n * ((1 - q) * (VISCOSITY_CONSTANT_SIGMA * u + VISCOSITY_CONSTANT_BETA * u * u)) * DeltaTime;
-					velocity += (-impulse / 2.0f);
-					j->GetModel()->velocity += (impulse / 2.0f);
+					Vector2f diff_n = diff.GetNormalized();
+					float u = (velocity - j->GetModel()->velocity).Dot(diff_n);
+					if (u > 0)
+					{
+						Vector2f viscoForce = diff_n * ((1 - scale) * (VISCOSITY_CONSTANT * u)) * DeltaTime;
+						velocity += (-viscoForce / 2.0f);
+						j->GetModel()->velocity += (viscoForce / 2.0f);
+					}
 				}
 			}
 		}

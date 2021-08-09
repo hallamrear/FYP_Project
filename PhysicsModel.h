@@ -23,8 +23,7 @@ private:
 	float Spiky(float radius);
 	float ViscoKernel(float radius);
 
-	void CalculateDoubleDensity(float DeltaTime);
-	void CalculatePressure();
+	void CalculateDensityAndPressure(float DeltaTime);
 	void CalculateViscosity(float DeltaTime);
 
 	void EnforceEdges();

@@ -67,9 +67,9 @@ void Particle::ResolveCollision(Particle* particle)
 	if (this == particle)
 		return;
 
-	Vector2f dist = model.GetPosition() - particle->GetModel()->GetPosition();
+	Vector2f dist = (model.GetPosition() - particle->GetModel()->GetPosition()).GetNormalized();
 	Vector2f vel = model.GetVelocity();
-	model.SetVelocity(dist + vel);
+	model.SetVelocity(dist * vel);
 
 	//////COLLISION RESPONSE
 	////// normalise the vector between them
@@ -81,7 +81,7 @@ void Particle::ResolveCollision(Particle* particle)
 	Vector2f pos;
 	pos.x = particle->GetModel()->GetPosition().x + ((sumOfRadii + 1) * normalisedDistance.x);
 	pos.y = particle->GetModel()->GetPosition().y + ((sumOfRadii + 1) * normalisedDistance.y);
-	//model.SetPosition(pos);
+	model.SetPosition(pos);
 
 	////PHYSICS RESPONSE
 
@@ -111,6 +111,12 @@ void Particle::Update(float DeltaTime)
 {
 	if (!isAlive)
 		return;
+
+	if(model.GetPosition().x < (0 - WORLD_EDGE * 4) || model.GetPosition().x > (WORLD_SIZE.x + WORLD_EDGE * 4))
+		Kill();
+
+	if (model.GetPosition().y < (0 - WORLD_EDGE * 4) || model.GetPosition().y >(WORLD_SIZE.y + WORLD_EDGE * 4))
+		Kill();
 
 	if(isStatic == false)
 		model.UpdateSPH(DeltaTime);
