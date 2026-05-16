@@ -12,7 +12,7 @@ static Vector2i GRID_SIZE = Vector2i(16, 9);
 static float WORLD_EDGE = 125.0f;
 
 //Simulation stuff
-static int STARTING_PARTICLE_COUNT = 500;
+static int STARTING_PARTICLE_COUNT = 2000;
 static int MAX_PARTICLE_COUNT = 10000;
 static float KERNEL_HEIGHT = 16.0f;
 static Vector2f GRAVITY = Vector2f(0.0f, 9.81f / 2);

@@ -10,7 +10,7 @@ class Application
 	float windowWidth;
 	float windowHeight;
 
-	Vector2i mouseWindowPos;
+	Vector2f mouseWindowPos;
 	Vector2f mouseDelta;
 
 	HINSTANCE Win32Instance;
@@ -30,7 +30,7 @@ public:
 
 	void UpdateMouseInputDetails(int posX, int posY);
 
-	void HandleKeyboardInput(float DeltaTime);
+	void HandleKeyboardInput(const SDL_Event& event, float DeltaTime, bool isKeyUpEvent);
 	void HandleMouseInput(float DeltaTime);
 
 	bool IsRunning();

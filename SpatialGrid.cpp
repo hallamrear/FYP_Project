@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "SpatialGrid.h"
 #include "Particle.h"
-#include "SFML\Graphics.hpp"
 #include "Overloads.h"
 #include "Renderer.h"
 
@@ -117,12 +116,13 @@ SpatialGrid::SpatialGrid(Vector2i grid_size, Vector2f cell_size)
 	cellSize = cell_size;
 	totalCells = grid_size.x * grid_size.y;
 
-	mb_size = WORLD_SIZE.x * WORLD_SIZE.y * 4;
-	mb_pixels = new sf::Uint8[mb_size];
+	//mb_size = WORLD_SIZE.x * WORLD_SIZE.y * 4;
+	//mb_pixels = new unsigned char[mb_size];
 
-	mb_img.loadFromMemory(mb_pixels, mb_size);
-	mb_tex.loadFromImage(mb_img);
-	mb_sprite.setTexture(mb_tex);
+	//todo : implement
+	//mb_img.loadFromMemory(mb_pixels, mb_size);
+	//mb_tex.loadFromImage(mb_img);
+	//mb_sprite.setTexture(mb_tex);
 
 	cells = new GridCell[totalCells];
 
@@ -210,7 +210,7 @@ void SpatialGrid::Update(float DeltaTime)
 
 void SpatialGrid::RenderGrid()
 {
-	sf::RectangleShape shape;
+	/*sf::RectangleShape shape;
 
 	shape.setFillColor(sf::Color::Transparent);
 	sf::Vector2f size = sf::Vector2f(cellSize.x, cellSize.y);
@@ -235,7 +235,7 @@ void SpatialGrid::RenderGrid()
 			shape.setPosition(position);
 			Renderer::RenderShape(&shape);
 		}
-	}
+	}*/
 }
 
 void SpatialGrid::RenderMarchingSquares()
@@ -253,12 +253,13 @@ void SpatialGrid::RenderMarchingSquares()
 			x = i * cellSize.x;
 			y = j * cellSize.y;
 
-			sf::Vector2f a = sf::Vector2f(x + (cellSize.x * 0.5f), y);
-			sf::Vector2f b = sf::Vector2f(x + (cellSize.x)	     , y + (cellSize.y * 0.5f));
-			sf::Vector2f c = sf::Vector2f(x + (cellSize.x * 0.5f), y + (cellSize.y));
-			sf::Vector2f d = sf::Vector2f(x						 , y + (cellSize.y * 0.5f));
+			Vector2f a = Vector2f(x + (cellSize.x * 0.5f), y);
+			Vector2f b = Vector2f(x + (cellSize.x)	     , y + (cellSize.y * 0.5f));
+			Vector2f c = Vector2f(x + (cellSize.x * 0.5f), y + (cellSize.y));
+			Vector2f d = Vector2f(x						 , y + (cellSize.y * 0.5f));
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			//todo : reimplement
+			/*if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
 				sf::RectangleShape old_shape;
 				old_shape.setFillColor(sf::Color::Transparent);
@@ -270,14 +271,13 @@ void SpatialGrid::RenderMarchingSquares()
 
 				if(draw_case != 0)
 					Renderer::RenderText(std::to_string(draw_case), 16.0, Vector2f(x, y), sf::Color::Red);
-			}
+			}*/
 
 			//*--a--*
 			//|	    |
 			//d     b
 			//|     |
 			//*--c--*
-			sf::RectangleShape shape;
 
 			switch (draw_case)
 			{
@@ -285,58 +285,58 @@ void SpatialGrid::RenderMarchingSquares()
 
 				break;
 			case 1:
-				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, White);
 				break;
 			case 2:
 
-				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, White);
 				break;
 			case 3:
 				//
-				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 4:
 
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 5:
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
-				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, White);
+				Renderer::RenderLine(Vector2f(b.x, b.y), Vector2f(c.x, c.y), 1.0f, White);
 
 				break;
 			case 6:
 				//
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, White);
 				break;
 			case 7:
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, White);
 				break;
 			case 8:
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(d.x, d.y), 1.0f, White);
 				break;
 			case 9:
 				//
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(c.x, c.y), 1.0f, White);
 				break;
 			case 10:
-				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(c.x, c.y), 1.0f, sf::Color::White);
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(c.x, c.y), 1.0f, White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 11:
-				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(a.x, a.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
-				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 12:
 				//
-				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(d.x, d.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 13:
 				//
-				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(b.x, b.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(b.x, b.y), 1.0f, White);
 				break;
 			case 14:
-				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, sf::Color::White);
+				Renderer::RenderLine(Vector2f(c.x, c.y), Vector2f(d.x, d.y), 1.0f, White);
 				break;
 			case 15:
 				break;
@@ -430,23 +430,32 @@ void SpatialGrid::UpdateNeighbours(int center_pos_x, int center_pos_y)
 	
 	if (center_pos_y - 1 >= 0)
 		surrounding[1] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x, center_pos_y - 1))];
-	if (center_pos_y - 1 >= 0)
+
+	if (center_pos_y - 1 >= 0 && center_pos_x + 1 < gridSize.x)
 		surrounding[2] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y - 1))];
+
 	if (center_pos_x - 1 >= 0)
 		surrounding[3] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x - 1,center_pos_y))];
 
 	surrounding[4] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x,center_pos_y))];
-	surrounding[5] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y))];
 
-	if (center_pos_x - 1 >= 0)
+	if (center_pos_x + 1 < gridSize.x)
+		surrounding[5] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y))];
+
+	if (center_pos_x - 1 >= 0 && center_pos_y + 1 < gridSize.y)
 		surrounding[6] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x - 1,center_pos_y + 1))];
 
-	surrounding[7] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x,center_pos_y + 1))];
-	surrounding[8] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y + 1))];
+	if (center_pos_y + 1 < gridSize.y)
+		surrounding[7] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x, center_pos_y + 1))];
+
+	if (center_pos_x + 1 < gridSize.x && center_pos_y + 1 < gridSize.y)
+		surrounding[8] = &cells[CalculateArrayIDFromCellPos(Vector2i(center_pos_x + 1,center_pos_y + 1))];
 
 	for (int i = 0; i < 9; i++)
 	{
-		if(surrounding[i])
+		if (surrounding[i] != nullptr)
+		{
 			surrounding[i]->UpdatePointWeight();
+		}
 	}
 }

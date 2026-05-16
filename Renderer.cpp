@@ -7,13 +7,22 @@ Renderer* Renderer::instance;
 
 Renderer::Renderer()
 {
+    m_ParticleImage = nullptr;
+
+    m_Renderer = nullptr;
     WindowHeight = 0;
     WindowWidth = 0;
     isInitialised = false;
+    m_ParticleRectListBack = 0;
+    m_ParticleRects = std::vector<SDL_FRect>();
+    m_ParticleRects.resize(MAX_PARTICLE_COUNT);
+    memset(&m_ParticleRects[0], 0, sizeof(SDL_FRect) * MAX_PARTICLE_COUNT);
+    font = nullptr;
 }
 
 Renderer::~Renderer()
 {
+    
 }
 
 HRESULT Renderer::Init(int width, int height)
@@ -23,17 +32,14 @@ HRESULT Renderer::Init(int width, int height)
     WindowWidth = width;
     WindowHeight = height;
 
-    if(GraphicsDevice::Get()->GetIsInitialised() == false)
-        GraphicsDevice::Get()->Init(width, height);
-
-#ifndef _DEBUG
-    if (!font.loadFromFile("fonts/arial.ttf"))
+    if (GraphicsDevice::Get()->GetIsInitialised() == false)
     {
-        // error...
-        OutputDebugStringA("Renderer: FAILED TO LOAD TEXT FROM FILE");
-        return E_FAIL;
+        GraphicsDevice::Get()->Init(width, height);
     }
-#endif
+
+    m_Renderer = SDL_CreateRenderer(GraphicsDevice::GetWindow(), nullptr);
+
+    m_ParticleImage = IMG_Load("Particle.png");
 
     hr = S_OK;
 
@@ -50,79 +56,73 @@ Renderer* Renderer::Get()
 
 void Renderer::PrepareFrame()
 {
-    GraphicsDevice::GetWindow()->clear(sf::Color::Black);
+    SDL_SetRenderDrawColorFloat(m_Renderer, 0.0f, 0.0f, 0.0f, 1.0f);
+    SDL_RenderClear(m_Renderer);
 }
 
 void Renderer::PresentFrame()
 {
-    GraphicsDevice::GetWindow()->display();
+    SDL_SetRenderDrawColorFloat(m_Renderer, 1.0F, 0.0f, 0.0f, 1.0f);
+    SDL_RenderRects(m_Renderer, &m_ParticleRects[0], m_ParticleRectListBack);
+    SDL_RenderPresent(m_Renderer);
+
+    memset(&m_ParticleRects[0], 0, sizeof(SDL_FRect) * MAX_PARTICLE_COUNT);
+    m_ParticleRectListBack = 0;
 }
 
-void Renderer::RenderShape_Impl(sf::Shape* shape)
+void Renderer::RenderShape_Impl(Shape* shape)
 {
-    GraphicsDevice::GetWindow()->draw(*shape);
+    //GraphicsDevice::GetWindow()->draw(*shape);
 }
 
-void Renderer::RenderVector_Impl(sf::Vector2f position, sf::Vector2f direction, float length)
+void Renderer::RenderVector_Impl(Vector2f position, Vector2f direction, float length)
 {
-    sf::Vertex line[] =
-    {
-        sf::Vertex(position, sf::Color::Magenta),
-        sf::Vertex(sf::Vector2f(position.x + (direction.x * length), position.y + (direction.y * length)), sf::Color::Magenta)
-    };
-
-    GraphicsDevice::GetWindow()->draw(line, 2, sf::Lines);
+    Vector2f end = { };
+    end.x = position.x + (direction.x * length);
+    end.y = position.y + (direction.y * length);
+    SDL_SetRenderDrawColorFloat(m_Renderer, 1.0f, 0.0f, 1.0f, 1.0f);
+    SDL_RenderLine(m_Renderer, position.x, position.y, end.x, end.y);
 }
 
-void Renderer::RenderLine_Impl(Vector2f start, Vector2f end, float thickness, sf::Color color)
+void Renderer::RenderLine_Impl(Vector2f start, Vector2f end, float thickness, SDL_Color color)
 {
-    sf::Vector2f dv = sf::Vector2f(end.x - start.x, end.y - start.y);
-    float dl = (float)sqrtf(dv.x * dv.x + dv.y * dv.y);
-    sf::Vector2f uv = sf::Vector2f(dv.x / dl, dv.y / dl);
-    sf::Vector2f up = sf::Vector2f(-uv.y, uv.x);
-    sf::Vector2f offset = up * (thickness / 2.0f);
-
-    sf::Vector2f st = sf::Vector2f(start.x, start.y);
-    sf::Vector2f endd = sf::Vector2f(end.x, end.y);
-
-    sf::Vertex* points = new sf::Vertex[4]
-    {
-        sf::Vertex(st + offset, color),
-        sf::Vertex(endd + offset, color),
-        sf::Vertex(endd - offset, color),
-        sf::Vertex(st - offset, color),
-    };
-
-    GraphicsDevice::GetWindow()->draw(points, 4, sf::Quads);
+    SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, 255);
+    SDL_RenderLine(m_Renderer, start.x, start.y, end.x, end.y);
 }
 
-void Renderer::RenderText_Impl(std::string str, float size, Vector2f pos, sf::Color color)
+void Renderer::RenderText_Impl(std::string str, float size, Vector2f pos, SDL_Color color)
 {
-    sf::Text text;
+    SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, 255);
+   /* sf::Text text;
     text.setFont(font);
     text.setPosition(pos.x, pos.y);
     text.setString(str);
     text.setCharacterSize(size);
     text.setFillColor(color);
-    GraphicsDevice::GetWindow()->draw(text);
+    GraphicsDevice::GetWindow()->draw(text);*/
+    OutputDebugString(L"RenderText_Impl not implemented.\n");
 }
 
 void Renderer::RenderParticle_Impl(Particle* particle)
 {
-    sf::CircleShape collider;
-    float r = particle->GetColliderRadius();
-    collider.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
-    collider.setRadius(r);
-    collider.setOrigin(r, r);
-    collider.setOutlineThickness(1.0f);
+    //TODO : Draw Circles instead.
+
+    float r = 3.0f;
+
+    SDL_FRect rect{};
+    m_ParticleRects[m_ParticleRectListBack].x = particle->GetModel()->GetPosition().x - r;
+    m_ParticleRects[m_ParticleRectListBack].y = particle->GetModel()->GetPosition().y - r;
+    m_ParticleRects[m_ParticleRectListBack].w = r + r;
+    m_ParticleRects[m_ParticleRectListBack].h = r + r;
 
     if (particle->isStatic)
-        collider.setOutlineColor(sf::Color::Yellow);
+        SDL_SetRenderDrawColor(m_Renderer, 255, 255, 0, 255);
     else
-        collider.setOutlineColor(sf::Color::Red);
+        SDL_SetRenderDrawColor(m_Renderer, 255, 0, 0, 255);
 
-    collider.setFillColor(sf::Color::Transparent);
-    GraphicsDevice::GetWindow()->draw(collider);
+    m_ParticleRectListBack++;
+
+    //SDL_RenderRect(m_Renderer, &rect);
 }
 
 void Renderer::RenderParticleDetailed_Impl(Particle* particle)
@@ -131,33 +131,32 @@ void Renderer::RenderParticleDetailed_Impl(Particle* particle)
 
     Vector2f dir = Vector2f(particle->GetModel()->GetVelocity());
     dir.GetNormalized();
-    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + dir, 2.0f, sf::Color::Yellow);
+    RenderLine(particle->GetModel()->GetPosition(), particle->GetModel()->GetPosition() + dir, 2.0f, {255, 255, 0, 255});
 
-    sf::RectangleShape rect;
-    rect.setSize(sf::Vector2f(2.0f, 2.0f));
-    rect.setOrigin(sf::Vector2f(1.0f, 1.0f));
-    rect.setFillColor(sf::Color::Red);
-    rect.setOutlineColor(sf::Color::Red);
-    rect.setPosition(particle->GetModel()->GetPosition().x, particle->GetModel()->GetPosition().y);
-    GraphicsDevice::GetWindow()->draw(rect);
+    SDL_Rect rect{};
+    rect.x = particle->GetModel()->GetPosition().x - 1.0f;
+    rect.y = particle->GetModel()->GetPosition().y - 1.0f;
+    rect.w = 2.0f;
+    rect.h = 2.0f;
+    SDL_SetRenderDrawColor(m_Renderer, 255, 0, 0, 255);
 }
 
-void Renderer::RenderShape(sf::Shape* shape)
+void Renderer::RenderShape(Shape* shape)
 {
     Get()->RenderShape_Impl(shape);
 }
 
-void Renderer::RenderText(std::string str, float size, Vector2f pos, sf::Color color)
+void Renderer::RenderText(std::string str, float size, Vector2f pos, SDL_Color color)
 {
     Get()->RenderText_Impl(str, size, pos, color);
 }
 
-void Renderer::RenderLine(Vector2f start, Vector2f end, float thickness, sf::Color color)
+void Renderer::RenderLine(Vector2f start, Vector2f end, float thickness, SDL_Color color)
 {
     Get()->RenderLine_Impl(start, end, thickness, color);
 }
 
-void Renderer::RenderVector(sf::Vector2f position, sf::Vector2f direction, float length)
+void Renderer::RenderVector(Vector2f position, Vector2f direction, float length)
 {
     Get()->RenderVector_Impl(position, direction, length);
 }

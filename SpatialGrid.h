@@ -43,11 +43,7 @@ public:
 
 class SpatialGrid
 {
-	sf::Image mb_img;
-	sf::Sprite mb_sprite;
 	int mb_size = 400 * 400 * 4;
-	sf::Uint8* mb_pixels;
-	sf::Texture mb_tex;
 
 	GridCell* surrounding[9];
 

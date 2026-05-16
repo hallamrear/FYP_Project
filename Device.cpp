@@ -8,6 +8,7 @@ GraphicsDevice::GraphicsDevice()
     isInitialised = false;
     WindowWidth = 0;
     WindowHeight = 0;
+    m_Window = nullptr;
 }
 
 GraphicsDevice::~GraphicsDevice()
@@ -16,10 +17,10 @@ GraphicsDevice::~GraphicsDevice()
     isInitialised = false;
 }
 
-sf::RenderWindow* GraphicsDevice::GetWindow_Impl()
+SDL_Window* GraphicsDevice::GetWindow_Impl()
 {
-    if (sfmlWindow != nullptr)
-        return sfmlWindow;
+    if (m_Window != nullptr)
+        return m_Window;
     else
         return nullptr;
 }
@@ -31,10 +32,10 @@ HRESULT GraphicsDevice::Init(int width, int height)
     WindowWidth = width;
     WindowHeight = height;
 
-    sfmlWindow = new sf::RenderWindow();
-    sfmlWindow->create(sf::VideoMode(width, height), "SPH");
+    SDL_WindowFlags flags = 0;
+    m_Window = SDL_CreateWindow("Smoothed Particle Hydrodynamics", width, height, flags);
 
-    if (sfmlWindow)
+    if (m_Window)
     {
         hr = S_OK;
         isInitialised = true;
@@ -51,7 +52,7 @@ GraphicsDevice* GraphicsDevice::Get()
     return instance;
 }
 
-sf::RenderWindow* GraphicsDevice::GetWindow()
+SDL_Window* GraphicsDevice::GetWindow()
 {
     return Get()->GetWindow_Impl();
 }

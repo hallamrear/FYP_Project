@@ -32,7 +32,15 @@
 #include <cmath>
 #include <algorithm>
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_render.h>
+
 //namespaces
 using std::string;
+
+constexpr const static SDL_Color White = SDL_Color{ 0, 0, 0, 255 };
+constexpr const static SDL_Color Red   = SDL_Color{ 255, 0, 0, 255 };
+constexpr const static SDL_Color Green = SDL_Color{ 0, 255, 0, 255 };
+constexpr const static SDL_Color Blue  = SDL_Color{ 0, 0, 255, 255 };
 
 #endif //PCH_H

@@ -42,7 +42,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             currentTime = (float)GetTickCount();
 
             deltaTime = currentTime - previousTime;
-            deltaTime /= 1000;
+            deltaTime /= 1000.0f;
 
             if (deltaTime > 0.0f)
             {

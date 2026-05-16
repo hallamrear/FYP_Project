@@ -310,9 +310,9 @@ void Simulation::Render()
 
 	if (isRunning == false)
 	{
-		Renderer::RenderText("Paused", 52.0f, Vector2f(WORLD_SIZE.x / 2 - (52.0f / 2), WORLD_SIZE.y / 2 - (52.0f / 2)), sf::Color::Red);
+		Renderer::RenderText("Paused", 52.0f, Vector2f(WORLD_SIZE.x / 2 - (52.0f / 2), WORLD_SIZE.y / 2 - (52.0f / 2)), Red);
 	}
 
 	std::string countStr = "Particles: " + std::to_string(particleSystem->livingParticleCount) + "/" + std::to_string(particleSystem->MaxParticleCount) + '\n';
-	Renderer::RenderText(countStr, 24.0f, Vector2f(52.0f, 40.0f), sf::Color::White);
+	Renderer::RenderText(countStr, 24.0f, Vector2f(52.0f, 40.0f), White);
 }

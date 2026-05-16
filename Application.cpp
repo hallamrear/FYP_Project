@@ -5,10 +5,6 @@
 
 #include "Simulation.h"
 #include "Particle.h"
-#include "SFML\System.hpp"
-
-//TODO : REMOVE
-#include <debugapi.h>
 
 Application::Application(float width, float height)
 {
@@ -71,82 +67,106 @@ void Application::UpdateMouseInputDetails(int posX, int posY)
 	mouseWindowPos.y = posY;
 }
 
-void Application::HandleKeyboardInput(float DeltaTime)
+void Application::HandleKeyboardInput(const SDL_Event& event, float DeltaTime, bool isKeyUpEvent)
 {
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && spaceIsHeld == false)
+	switch (event.key.key)
 	{
-		spaceIsHeld = true;
-		simulation->ToggleIsRunning();
-	}
-
-	if (spaceIsHeld == true && sf::Keyboard::isKeyPressed(sf::Keyboard::Space) == false)
+	case SDLK_SPACE:
 	{
-		spaceIsHeld = false;
+		if (isKeyUpEvent == false && event.key.repeat == false)
+		{
+			simulation->ToggleIsRunning();
+		}
 	}
+	break;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && shiftIsHeld == false)
+	case SDLK_LSHIFT:
 	{
-		shiftIsHeld = true;
-		simulation->IncrementRenderingDetails();
+		if (isKeyUpEvent == false && event.key.repeat == false)
+		{
+			simulation->IncrementRenderingDetails();
+		}
 	}
+	break;
 
-	if (shiftIsHeld == true && sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) == false)
-	{
-		shiftIsHeld = false;
-	}
-
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+	case SDLK_R:
 		simulation->ResetSimulation();
+		break;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+	case SDLK_1:
 		simulation->ResetSimulationToExampleOne();
+		break;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+	case SDLK_2:
 		simulation->ResetSimulationToExampleTwo();
+		break;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+	case SDLK_3:
 		simulation->ResetSimulationToExampleThree();
+		break;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+	case SDLK_Q:
 	{
 		std::string s;
 		s = "Particles: " + std::to_string(mouseWindowPos.x) + '/' + std::to_string(mouseWindowPos.y) + '\n';
 		OutputDebugStringA(s.c_str());
 	}
+	break;
 
+	default:
+		break;
+
+	}
 }
 
 void Application::HandleMouseInput(float DeltaTime)
 {
-	mouseWindowPos.x = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).x;
-	mouseWindowPos.y = sf::Mouse::getPosition(*GraphicsDevice::GetWindow()).y;
+	SDL_MouseButtonFlags buttonState = SDL_GetMouseState(&mouseWindowPos.x, &mouseWindowPos.y);
 
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	if (buttonState & SDL_BUTTON_LMASK)
 	{
-		simulation->AddParticle(mouseWindowPos);
+		Vector2i pos = { (int)mouseWindowPos.x, (int)mouseWindowPos.y };
+		simulation->AddParticle(pos);
 	}
 	
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+	if (buttonState & SDL_BUTTON_RMASK)
 	{
-		Particle* p = simulation->AddParticle(mouseWindowPos);
+		Vector2i pos = { (int)mouseWindowPos.x, (int)mouseWindowPos.y };
+		Particle* p = simulation->AddParticle(pos);
 		p->isStatic = true;
 	}
 }
 
 void Application::Update(float DeltaTime)
 {	
-	sf::Event event;
-	while (GraphicsDevice::GetWindow()->pollEvent(event))
+	SDL_Event e{};
+
+	while (SDL_PollEvent(&e))
 	{
-		if (event.type == sf::Event::Closed)
+		switch (e.type)
 		{
-			isRunning = false;
-			GraphicsDevice::GetWindow()->close();
+			case SDL_EVENT_KEY_UP:
+			case SDL_EVENT_KEY_DOWN:
+			{
+				HandleKeyboardInput(e, DeltaTime, e.type == SDL_EVENT_KEY_UP);
+			}
+			break;
+
+			case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			case SDL_EVENT_MOUSE_MOTION:
+			{
+				HandleMouseInput(DeltaTime);
+			}
+			break;
+
+			case SDL_EVENT_QUIT:
+			{
+				isRunning = false;
+				return;
+			}
+			break;
 		}
 	}
-
-	HandleMouseInput(DeltaTime);
-	HandleKeyboardInput(DeltaTime);
 
 	simulation->Update(DeltaTime);
 }

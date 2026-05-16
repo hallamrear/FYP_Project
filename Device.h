@@ -1,18 +1,17 @@
 #pragma once
 #include "PCH.h"
-#include "SFML\Graphics.hpp"
 
 class GraphicsDevice
 {
 private:
 	static GraphicsDevice* instance;
 	bool isInitialised;
-	sf::RenderWindow* sfmlWindow;
+	SDL_Window* m_Window;
 
 	GraphicsDevice();
 	~GraphicsDevice();
 
-	sf::RenderWindow* GetWindow_Impl();
+	SDL_Window* GetWindow_Impl();
 
 public:
 	int WindowWidth;
@@ -20,7 +19,7 @@ public:
 
 	HRESULT Init(int width, int height);
 	static GraphicsDevice* Get();
-	static sf::RenderWindow* GetWindow();
+	static SDL_Window* GetWindow();
 
 	bool GetIsInitialised();	
 };
