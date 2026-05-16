@@ -2,13 +2,16 @@
 #include "Renderer.h"
 #include "Particle.h"
 #include "Overloads.h"
+#include <fstream>
 
 Renderer* Renderer::instance;
+
+static std::vector<float> test = std::vector<float>(10, 10.0f);
 
 Renderer::Renderer()
 {
     m_ParticleImage = nullptr;
-
+    m_GPUDevice = nullptr;
     m_Renderer = nullptr;
     WindowHeight = 0;
     WindowWidth = 0;
@@ -25,6 +28,58 @@ Renderer::~Renderer()
     
 }
 
+SDL_GPUShader* m_ComputeShader;
+SDL_GPUComputePass* m_CurrentComputePass;
+SDL_GPUCommandBuffer* m_CommandBuffer;
+SDL_GPUComputePipeline* m_ComputePipeline;
+char* m_ShaderByteCode;
+size_t m_ShaderByteCodeSize;
+SDL_GPUBuffer* m_GPUBuffer;
+SDL_GPUTransferBuffer* m_TransferBuffer;
+
+void Renderer::ComputePass()
+{
+    m_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_GPUDevice);
+
+    float* transferData = (float*)SDL_MapGPUTransferBuffer(m_GPUDevice, m_TransferBuffer, true);
+    memcpy(&test[0], transferData, sizeof(float) * test.size());
+    SDL_UnmapGPUTransferBuffer(m_GPUDevice, m_TransferBuffer);
+
+    SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(m_CommandBuffer);
+
+    SDL_GPUTransferBufferLocation location{};
+    location.transfer_buffer = m_TransferBuffer;
+    location.offset = 0;
+
+    SDL_GPUBufferRegion region{};
+    region.buffer = m_GPUBuffer;
+    region.size = sizeof(float) * test.size();
+    region.offset = 0;
+
+    SDL_UploadToGPUBuffer(copyPass, &location, &region, true);
+
+    SDL_EndGPUCopyPass(copyPass);
+
+    SDL_GPUStorageBufferReadWriteBinding storageBinding{};
+    storageBinding.buffer = m_GPUBuffer;
+    storageBinding.cycle = true;
+    m_CurrentComputePass = SDL_BeginGPUComputePass(m_CommandBuffer, nullptr, 0, &storageBinding, 1);
+    SDL_BindGPUComputePipeline(m_CurrentComputePass, m_ComputePipeline);
+
+    //PUSH DATA HERE
+
+    SDL_DispatchGPUCompute(m_CurrentComputePass, 8, 1, 1);
+
+    SDL_EndGPUComputePass(m_CurrentComputePass);
+    m_CurrentComputePass = nullptr;
+
+    copyPass = SDL_BeginGPUCopyPass(m_CommandBuffer);
+    SDL_DownloadFromGPUBuffer(copyPass, &region, &location);
+
+    SDL_EndGPUCopyPass(copyPass);
+    SDL_SubmitGPUCommandBuffer(m_CommandBuffer);
+}
+
 HRESULT Renderer::Init(int width, int height)
 {
     HRESULT hr = E_FAIL;
@@ -39,7 +94,104 @@ HRESULT Renderer::Init(int width, int height)
 
     m_Renderer = SDL_CreateRenderer(GraphicsDevice::GetWindow(), nullptr);
 
-    m_ParticleImage = IMG_Load("Particle.png");
+    //m_ParticleImage = IMG_Load("Particle.png");
+
+    SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_DXIL;
+
+    bool debug = false;
+#ifdef  _DEBUG
+    debug = true;
+#endif //  _DEBUG
+
+    m_GPUDevice = SDL_CreateGPUDevice(format, debug, "direct3d12");
+    m_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_GPUDevice);
+
+    SDL_GPUComputePipelineCreateInfo createInfo{};
+    memset(&createInfo, 0, sizeof(SDL_GPUComputePipelineCreateInfo));
+
+    //Load file.
+    std::ifstream stream("ComputeShader.cso", std::ios::binary);
+
+    char* bytes = nullptr;
+    size_t size = 0;
+
+    //if (stream.good() && stream.is_open())
+    //{
+    //    stream.seekg(std::ios::end);
+    //    size = stream.tellg();
+    //    bytes = new char[size];
+    //    //Seek end
+    //    stream.seekg(0, std::ios::end);
+    //    //Get size from current position
+    //    int size = (int)stream.tellg();
+    //    //Go back to the start for read.
+    //    stream.seekg(0, std::ios::beg);
+    //    stream.read(bytes, size);
+    //    stream.close();
+    //}
+
+    //if (bytes != nullptr)
+    //{
+    //    m_ShaderByteCode = bytes;
+    //    m_ShaderByteCodeSize = size;
+    //}
+    //else
+    //{
+    //    throw;
+    //}
+
+    m_ShaderByteCode = (char*)SDL_LoadFile("ComputeShader.cso", &m_ShaderByteCodeSize);
+
+    createInfo.code = (Uint8*)m_ShaderByteCode;
+    createInfo.code_size = m_ShaderByteCodeSize;
+    createInfo.entrypoint = "main";
+    createInfo.format = format;
+    createInfo.threadcount_x = 8;
+    createInfo.threadcount_y = 1;
+    createInfo.threadcount_z = 1;
+    createInfo.num_readwrite_storage_buffers = 1;
+    createInfo.num_readwrite_storage_textures = 0;
+    createInfo.num_readonly_storage_textures = 0;
+    createInfo.num_readonly_storage_buffers = 0;
+
+    m_ComputePipeline = SDL_CreateGPUComputePipeline(m_GPUDevice, &createInfo);
+
+    std::string er = SDL_GetError();
+
+    /*SDL_GPUShaderCreateInfo shaderCreateInfo{};
+    memset(&shaderCreateInfo, 0, sizeof(SDL_GPUShaderCreateInfo));
+
+    shaderCreateInfo.code = (Uint8*)m_ShaderByteCode;
+    shaderCreateInfo.code_size = m_ShaderByteCodeSize;
+    shaderCreateInfo.entrypoint = "main";
+    shaderCreateInfo.format = format;
+    shaderCreateInfo.num_samplers = 0;
+    shaderCreateInfo.num_storage_buffers = 1;
+    shaderCreateInfo.num_storage_textures = 0;
+    shaderCreateInfo.num_uniform_buffers = 0;
+    shaderCreateInfo.props = 0;
+    shaderCreateInfo.stage = SDL_GPU_SHADERSTAGE;
+
+    m_ComputeShader = SDL_CreateGPUShader(m_GPUDevice, &shaderCreateInfo);*/
+
+    SDL_GPUBufferCreateInfo bufferInfo{ 0 };
+    bufferInfo.size = sizeof(float) * test.size();
+    bufferInfo.usage = SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE | SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ;
+    m_GPUBuffer = SDL_CreateGPUBuffer(m_GPUDevice, &bufferInfo);
+
+    SDL_GPUTransferBufferCreateInfo transferBufferInfo = {};
+    transferBufferInfo.size = bufferInfo.size;
+    transferBufferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+    m_TransferBuffer = SDL_CreateGPUTransferBuffer(m_GPUDevice, &transferBufferInfo);
+
+
+
+
+    //SDL_ReleaseGPUGraphicsPipeline(context->Device, DrawPipeline);
+    //SDL_ReleaseGPUTexture(context->Device, Texture);
+    //SDL_ReleaseGPUSampler(context->Device, Sampler);
+    //SDL_ReleaseGPUBuffer(context->Device, VertexBuffer);
+
 
     hr = S_OK;
 

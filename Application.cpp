@@ -173,6 +173,8 @@ void Application::Update(float DeltaTime)
 
 void Application::Render()
 {
+	Renderer::Get()->ComputePass();
+
 	Renderer::Get()->PrepareFrame();
 
 	simulation->Render();

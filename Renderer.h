@@ -10,7 +10,9 @@ class Renderer
 private:
 	static Renderer* instance;
 
+	SDL_GPUDevice* m_GPUDevice;
 	SDL_Renderer* m_Renderer;
+	SDL_Texture* m_ParticleImage;
 	TTF_Font* font;
 
 	int WindowWidth;
@@ -37,6 +39,10 @@ public:
 
 	HRESULT Init(int width, int height);
 	static Renderer* Get();
+
+	void ComputePass();
+
+	void EndComputePass();
 
 	void PrepareFrame();
 	void PresentFrame();
