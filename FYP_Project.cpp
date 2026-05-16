@@ -47,7 +47,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             if (deltaTime > 0.0f)
             {
                 application->Update(deltaTime);
-                application->Update(deltaTime);
                 application->Render();
             }
 
