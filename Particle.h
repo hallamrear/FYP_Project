@@ -2,16 +2,18 @@
 #include "PhysicsModel.h"
 #include "SimConsts.h"
 
-class Particle
+class alignas(16) Particle
 {	
 private:
-	float colliderRadius;
 	PhysicsModel model;
-
+	float colliderRadius;
 public:
 	UINT poolID;
 	bool isAlive;
 	bool isStatic;
+private:
+	bool Padding[6];
+public:
 
 	Particle();
 	~Particle();

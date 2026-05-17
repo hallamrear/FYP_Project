@@ -3,10 +3,11 @@
 
 class Particle;
 
-class PhysicsModel
+class alignas(16) PhysicsModel
 {
 private:
 	bool isResting;
+	bool BoolPadding[7];
 	Vector2f previousPosition;
 	Vector2f position;
 	Vector2f acceleration;

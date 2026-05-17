@@ -45,6 +45,7 @@ void Particle::Kill()
 	isAlive = false;
 	isStatic = false;
 	model.Reset();
+	model.SetPosition(Vector2f(-5.0f, -5.0f));
 }
 
 void Particle::SetAlive(bool state)

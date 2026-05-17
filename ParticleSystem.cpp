@@ -15,15 +15,17 @@ ParticleSystem::ParticleSystem(int MaxParticleCount)
 
     this->MaxParticleCount = MaxParticleCount;
 
-    Particle* particle;
+    Positions = new Vector2f[MaxParticleCount]();
+
+    ParticlePool = std::vector<Particle>(MaxParticleCount);
+    Particle* particle = nullptr;
 
     for (int i = 0; i < MaxParticleCount; i++)
     {
-        particle = new Particle();
+        particle = &ParticlePool[i];
         particle->poolID = i;
         deadParticleCount++;
         deadParticlesList = LinkedList::PushFront(deadParticlesList, particle);
-        ParticlePool.push_back(particle);
     }
 
     particle = nullptr;

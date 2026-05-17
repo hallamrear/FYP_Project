@@ -1,18 +1,40 @@
 #pragma once
+#include "SimConsts.h"
 #include "Device.h"
 #include "Vector.h"
+
+struct alignas(16) ConstantBuffer
+{
+	Vector2f MousePosition;
+	float DeltaTime;
+	float ElapsedTime;
+	Vector2f Particles[MAX_PARTICLE_COUNT];
+};
 
 class Particle;
 class TTF_Font;
 class Shape;
+
 class Renderer
 {
 private:
 	static Renderer* instance;
 
+	SDL_GPUTexture* m_GPUTexture;
+	SDL_GPUShader* m_ComputeShader;
+	SDL_GPUComputePass* m_CurrentComputePass;
+	SDL_GPUCommandBuffer* m_CommandBuffer;
+	SDL_GPUComputePipeline* m_ComputePipeline;
+	char* m_ShaderByteCode;
+	size_t m_ShaderByteCodeSize;
+	SDL_GPUBuffer* m_GPUStorageBuffer;
+	SDL_GPUTransferBuffer* m_DataTransferBuffer;
+	SDL_GPUTexture* m_SwapchainTexture;
 	SDL_GPUDevice* m_GPUDevice;
 	SDL_Renderer* m_Renderer;
 	SDL_Texture* m_ParticleImage;
+	SDL_GPUTransferBuffer* m_ConstantBufferTransferBuffer;
+	SDL_GPUBuffer* m_GPUConstantBuffer;
 	TTF_Font* font;
 
 	int WindowWidth;
@@ -33,6 +55,7 @@ private:
 	void RenderText_Impl(std::string str, float size, Vector2f pos, SDL_Color color);
 
 public:
+	ConstantBuffer ConstantBuffer;
 	Renderer(const Renderer&) = delete;
 
 	float ClearColour[4] = {};
@@ -41,8 +64,6 @@ public:
 	static Renderer* Get();
 
 	void ComputePass();
-
-	void EndComputePass();
 
 	void PrepareFrame();
 	void PresentFrame();

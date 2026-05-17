@@ -259,6 +259,7 @@ void Simulation::Update(float DeltaTime)
 
 			//Update target particle.
 			particleSystem->LivingParticles[i]->Update(DeltaTime);
+			particleSystem->Positions[particleSystem->LivingParticles[i]->poolID] = particleSystem->LivingParticles[i]->GetModel()->GetPosition();
 
 			//Perform collision detection checks on each of the neighbour particles to the target particle.
 			for (int neighbours = 0; neighbours < allLocalParticles.size(); neighbours++)

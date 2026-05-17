@@ -52,6 +52,12 @@ bool Application::Init()
 		WORLD_SIZE,
 		GRID_SIZE);
 
+	for (size_t i = 0; i < _countof(Renderer::Get()->ConstantBuffer.Particles); i++)
+	{
+		Renderer::Get()->ConstantBuffer.Particles[i].x = (float)(rand() % (int)(WORLD_SIZE.x - 100) + 50);
+		Renderer::Get()->ConstantBuffer.Particles[i].y = (float)(rand() % (int)(WORLD_SIZE.y - 100) + 50);
+	}
+
 	isInitialised = true;
 	return isInitialised;
 }
@@ -167,6 +173,11 @@ void Application::Update(float DeltaTime)
 			break;
 		}
 	}
+
+	Renderer::Get()->ConstantBuffer.MousePosition = mouseWindowPos;
+	Renderer::Get()->ConstantBuffer.DeltaTime = DeltaTime;
+	Renderer::Get()->ConstantBuffer.ElapsedTime += DeltaTime;
+	memcpy(&Renderer::Get()->ConstantBuffer.Particles, simulation->GetParticleSystem()->Positions, sizeof(Vector2f) * MAX_PARTICLE_COUNT);
 
 	simulation->Update(DeltaTime);
 }

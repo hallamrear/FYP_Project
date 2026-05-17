@@ -1,6 +1,7 @@
 #pragma once
 #include "LinkedList.h"
 class Particle;
+class Vector2f;
 
 class ParticleSystem
 {
@@ -10,8 +11,10 @@ private:
 	int isRenderingDetails = 0;
 
 public:
+	Vector2f* Positions;
+
 	//Exposing to simulation so i dont have to loop twice
-	std::vector<Particle*> ParticlePool;
+	std::vector<Particle> ParticlePool;
 	std::vector<Particle*> LivingParticles;
 
 	UINT MaxParticleCount;
